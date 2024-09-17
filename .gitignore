@@ -1,0 +1,25 @@
+#Maven output
+target/
+pom.xml.versionsBackup
+pom.xml.releaseBackup
+
+#Merge files and temporary files
+*.orig
+*.orig.*
+*.chg.*
+*.rej
+*.conflict~
+
+#Netbeans files
+/nbproject/private/
+
+#Eclipse files
+.settings
+.project
+.classpath
+.metadata
+
+#IntelliJ
+# Default ignored files
+.idea
+*.iml
