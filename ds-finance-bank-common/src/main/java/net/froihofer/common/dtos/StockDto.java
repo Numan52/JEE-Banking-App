@@ -7,14 +7,22 @@ public class StockDto {
     private long shareId;
     private long customerId;
     private String stockSymbol;
+    private String companyName;
     private int quantity;
     private BigDecimal  pricePerShare;
     private Date purchaseDate;
 
-    public StockDto(long shareId, long customerId, String stockSymbol, int quantity, BigDecimal pricePerShare, Date purchaseDate) {
+    public StockDto(String stockSymbol, String companyName, BigDecimal pricePerShare) {
+        this.stockSymbol = stockSymbol;
+        this.companyName = companyName;
+        this.pricePerShare = pricePerShare;
+    }
+
+    public StockDto(long shareId, long customerId, String stockSymbol, String companyName, int quantity, BigDecimal pricePerShare, Date purchaseDate) {
         this.shareId = shareId;
         this.customerId = customerId;
         this.stockSymbol = stockSymbol;
+        this.companyName = companyName;
         this.quantity = quantity;
         this.pricePerShare = pricePerShare;
         this.purchaseDate = purchaseDate;
@@ -66,5 +74,13 @@ public class StockDto {
 
     public void setPurchaseDate(Date purchaseDate) {
         this.purchaseDate = purchaseDate;
+    }
+
+    public String getCompanyName() {
+        return companyName;
+    }
+
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
     }
 }
