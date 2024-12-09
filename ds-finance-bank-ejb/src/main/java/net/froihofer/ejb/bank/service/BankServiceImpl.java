@@ -1,38 +1,68 @@
 package net.froihofer.ejb.bank.service;
 
+import jakarta.annotation.Resource;
+import jakarta.annotation.security.DeclareRoles;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.ejb.SessionContext;
+import jakarta.ejb.Stateless;
 import net.froihofer.common.BankException;
 import net.froihofer.common.BankService;
 import net.froihofer.common.dtos.CustomerDto;
 import net.froihofer.common.dtos.StockDto;
-import net.froihofer.dsfinance.ws.trading.api.PublicStockQuote;
-import net.froihofer.dsfinance.ws.trading.api.TradingWSException_Exception;
+//import net.froihofer.dsfinance.ws.trading.api.PublicStockQuote;
+//import net.froihofer.dsfinance.ws.trading.api.TradingWSException_Exception;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+@Stateless(name = "BankService")
+@DeclareRoles({"customer", "employee"}) //RolesAllowed need to be changed at each methode!
 public class BankServiceImpl implements BankService {
 
+    @Resource
+    private SessionContext sessionContext;
+
+
     @Override
+    @RolesAllowed({"employee", "customer"})
+    public String getUserRole() // To get Role of client
+    {
+        if(sessionContext.isCallerInRole("customer"))
+        {
+            return "customer";
+        }
+        else if(sessionContext.isCallerInRole("employee"))
+        {
+            return "employee";
+        }
+        return "Unauthorized!";
+    }
+
+    @Override
+    @RolesAllowed({"employee", "customer"})
     public void addCustomer(CustomerDto customerDto) {
         // TODO: add customer to database
 
     }
 
     @Override
+    @RolesAllowed({"employee", "customer"})
     public CustomerDto findCustomer(String customerId) {
 
         return null;
     }
 
     @Override
-    public CustomerDto findCustomerByName(String firstName, String lastName) {
+    @RolesAllowed({"employee", "customer"})
+    public List<CustomerDto> findCustomerByName(String firstName, String lastName) {
         return null;
     }
 
     @Override
+    @RolesAllowed({"employee", "customer"})
     public List<StockDto> findStock(String companyName) throws BankException {
-        if (companyName == null || companyName.isEmpty()) {
+       /* if (companyName == null || companyName.isEmpty()) {
             throw  new BankException("Stock Symbol is empty");
         }
 
@@ -49,25 +79,31 @@ public class BankServiceImpl implements BankService {
 
 
         return stockDtos;
+        */
+        return null;
     }
 
     @Override
+    @RolesAllowed({"employee", "customer"})
     public BigDecimal buyStock(long customerId, String stockSymbol, int shares) {
 
         return null;
     }
 
     @Override
+    @RolesAllowed({"employee", "customer"})
     public BigDecimal sellStock(long customerId, String stockSymbol, int shares) {
         return null;
     }
 
     @Override
+    @RolesAllowed({"employee", "customer"})
     public List<StockDto> getCustomerPortfolio(long customerId) {
         return List.of();
     }
 
     @Override
+    @RolesAllowed({"employee", "customer"})
     public BigDecimal getInvestableVolume() {
         return null;
     }
