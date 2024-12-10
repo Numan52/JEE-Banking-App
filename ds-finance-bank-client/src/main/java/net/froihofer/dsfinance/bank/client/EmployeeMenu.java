@@ -9,10 +9,7 @@ public class EmployeeMenu {
 
     public void employeeMenu(Scanner scanner, BankService bankService){
 
-        int input = scanner.nextInt();
-
         System.out.print("\n---TRADING SERVICE---\n");
-
         System.out.println("(1) Add Customer");
         System.out.println("(2) Search Customer");
         System.out.println("(3) Search Stock");
@@ -21,7 +18,8 @@ public class EmployeeMenu {
         System.out.println("(6) List Customer's Deposit");
         System.out.println("(7) Investible Bank Volume");
         System.out.print("Enter a number: ");
-
+        int input = scanner.nextInt();
+        scanner.nextLine(); // consuming the line break of nextint
         switch (input) {
             case 1:
                 addCustomer(scanner, bankService);
@@ -51,6 +49,7 @@ public class EmployeeMenu {
     }
 
     public void addCustomer(Scanner scanner, BankService bankService){
+        System.out.println(bankService.getUserRole());
         System.out.println("+-----------------+-----------------+-----------------+");
         System.out.println("+--------------- Create a new customer ---------------");
         System.out.println("First Name");

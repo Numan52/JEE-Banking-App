@@ -1,6 +1,8 @@
 package net.froihofer.common.dtos;
 
-public class CustomerDto {
+import java.io.Serializable;
+
+public class CustomerDto implements Serializable {
     private String customerId;
     private String firstName;
     private String lastName;
