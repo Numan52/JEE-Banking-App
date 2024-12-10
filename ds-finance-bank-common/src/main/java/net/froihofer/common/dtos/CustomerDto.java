@@ -5,12 +5,21 @@ public class CustomerDto {
     private String firstName;
     private String lastName;
     private String address;
+    private String password;
 
-    public CustomerDto(String customerId, String firstName, String lastName, String address) {
+   /* public CustomerDto(String customerId, String firstName, String lastName, String address) {
         this.customerId = customerId;
         this.firstName = firstName;
         this.lastName = lastName;
         this.address = address;
+    }*/
+
+    public CustomerDto(String firstName, String lastName, String address, String password) {
+        this.customerId = "";
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.address = address;
+        this.password = password;
     }
 
     public String getCustomerId() {

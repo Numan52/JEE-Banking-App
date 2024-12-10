@@ -43,6 +43,7 @@ public class BankServiceImpl implements BankService {
     @RolesAllowed({"employee", "customer"})
     public void addCustomer(CustomerDto customerDto) {
         // TODO: add customer to database
+        System.out.println(customerDto.getFirstName() + "added!");
 
     }
 
