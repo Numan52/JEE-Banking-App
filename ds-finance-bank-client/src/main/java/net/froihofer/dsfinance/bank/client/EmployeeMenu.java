@@ -1,5 +1,6 @@
 package net.froihofer.dsfinance.bank.client;
 
+import net.froihofer.common.BankException;
 import net.froihofer.common.BankService;
 import net.froihofer.common.dtos.CustomerDto;
 
@@ -28,6 +29,7 @@ public class EmployeeMenu {
                 // TODO: implement method to find customer
                 break;
             case 3:
+                findStock(scanner, bankService);
                 // TODO: implement method to find stock
                 break;
             case 4:
@@ -49,7 +51,6 @@ public class EmployeeMenu {
     }
 
     public void addCustomer(Scanner scanner, BankService bankService){
-        System.out.println(bankService.getUserRole());
         System.out.println("+-----------------+-----------------+-----------------+");
         System.out.println("+--------------- Create a new customer ---------------");
         System.out.println("First Name");
@@ -61,6 +62,22 @@ public class EmployeeMenu {
         System.out.println("Password");
         String password = scanner.nextLine();
         bankService.addCustomer(new CustomerDto(firstName, lastName, address, password));
+    }
+
+    //Search for stock quotes based on a part of the company name.
+    public void findStock(Scanner scanner, BankService bankService){
+        System.out.println("+-----------------+-----------------+-----------------+");
+        System.out.println("+--------------- Find Stock ---------------");
+        System.out.println("Part of Company Name: ");
+        String companyName = scanner.nextLine();
+        try
+        {
+            bankService.findStock(companyName);
+        }catch (BankException e)
+        {
+            System.out.println(e.getMessage());
+        }
+
     }
 
 }
