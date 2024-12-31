@@ -10,6 +10,7 @@ import net.froihofer.common.BankException;
 import net.froihofer.common.BankService;
 import net.froihofer.common.dtos.CustomerDto;
 import net.froihofer.common.dtos.StockDto;
+import net.froihofer.ejb.bank.dao.BankDAO;
 import net.froihofer.ejb.bank.dao.CustomerDAO;
 import net.froihofer.ejb.bank.entity.Customer;
 import net.froihofer.dsfinance.ws.trading.api.PublicStockQuote;
@@ -27,6 +28,9 @@ public class BankServiceImpl implements BankService {
     private SessionContext sessionContext;
     @Inject
     CustomerDAO customerDAO;
+
+    @Inject
+    BankDAO bankDAO;
 
     @Override
     @RolesAllowed({"employee", "customer"})
@@ -116,6 +120,6 @@ public class BankServiceImpl implements BankService {
     @Override
     @RolesAllowed({"employee", "customer"})
     public BigDecimal getInvestableVolume() {
-        return null;
+        return bankDAO.getAvailableVolume();
     }
 }

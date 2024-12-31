@@ -17,12 +17,12 @@ public class Bank implements Serializable {
 
     @Max(1_000_000_000)
     @Column(name = "AVAILABLE_VOLUME", nullable = false)
-    private int availableVolume;
+    private BigDecimal availableVolume;
 
     public Bank() {
     }
 
-    public Bank(int availableVolume) {
+    public Bank(BigDecimal availableVolume) {
         this.availableVolume = availableVolume;
     }
 
@@ -35,11 +35,11 @@ public class Bank implements Serializable {
         this.id = id;
     }
 
-    public int getAvailableVolume() {
+    public BigDecimal getAvailableVolume() {
         return availableVolume;
     }
 
-    public void setAvailableVolume(int availableVolume) {
+    public void setAvailableVolume(BigDecimal availableVolume) {
         this.availableVolume = availableVolume;
     }
 }
