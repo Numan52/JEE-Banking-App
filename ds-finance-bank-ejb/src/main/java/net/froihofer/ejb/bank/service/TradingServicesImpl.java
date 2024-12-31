@@ -33,13 +33,13 @@ public class TradingServicesImpl {
     }
 
     //Search for stock quotes based on a part of the company name.
-    public static PublicStockQuote getPSQ(String symbol) throws BankException {
+    public static List<PublicStockQuote> getPSQ(String symbol) throws BankException {
         List<PublicStockQuote> publicStockQuoteList;
         try {
             publicStockQuoteList = TradingServicesImpl.getTradingWebService().findStockQuotesByCompanyName(symbol);
         } catch (TradingWSException_Exception exception){
             throw new BankException("Could not retrieve stocks information.\n" + exception.getMessage());
         }
-        return publicStockQuoteList.get(0);
+        return publicStockQuoteList;
     }
 }

@@ -1,9 +1,10 @@
 package net.froihofer.common.dtos;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 
-public class StockDto {
+public class StockDto implements Serializable {
     private long shareId;
     private long customerId;
     private String stockSymbol;

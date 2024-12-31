@@ -3,7 +3,10 @@ package net.froihofer.dsfinance.bank.client;
 import net.froihofer.common.BankException;
 import net.froihofer.common.BankService;
 import net.froihofer.common.dtos.CustomerDto;
+import net.froihofer.common.dtos.StockDto;
 
+import java.math.RoundingMode;
+import java.util.List;
 import java.util.Scanner;
 
 public class EmployeeMenu {
@@ -30,7 +33,6 @@ public class EmployeeMenu {
                 break;
             case 3:
                 findStock(scanner, bankService);
-                // TODO: implement method to find stock
                 break;
             case 4:
                 // TODO: implement method to buy stock for customer
@@ -70,9 +72,19 @@ public class EmployeeMenu {
         System.out.println("+--------------- Find Stock ---------------");
         System.out.println("Part of Company Name: ");
         String companyName = scanner.nextLine();
+
         try
         {
-            bankService.findStock(companyName);
+            List<StockDto> stocks = bankService.findStock(companyName);
+            System.out.println("Found stocks: ");
+            System.out.println("+-----------------+-----------------+-----------------+");
+
+            for (StockDto stock : stocks) {
+                System.out.println("Company Name: " + stock.getCompanyName());
+                System.out.println("Stock Symbol: " + stock.getStockSymbol());
+                System.out.println("Price per share: " + stock.getPricePerShare().setScale(2, RoundingMode.HALF_EVEN));
+                System.out.println("+-----------------+-----------------+");
+            }
         }catch (BankException e)
         {
             System.out.println(e.getMessage());

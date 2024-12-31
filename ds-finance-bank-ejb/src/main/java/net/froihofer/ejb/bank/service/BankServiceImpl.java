@@ -50,7 +50,6 @@ public class BankServiceImpl implements BankService {
     @Override
     @RolesAllowed({"employee", "customer"})
     public void addCustomer(CustomerDto customerDto) {
-        // TODO: add customer to database
         Customer customer = new Customer(customerDto.getFirstName(),customerDto.getLastName(),customerDto.getAddress());
         System.out.println("Saving new customer...");
         customerDAO.persist(customer);
@@ -75,27 +74,25 @@ public class BankServiceImpl implements BankService {
     @Override
     @RolesAllowed({"employee", "customer"})
     public List<StockDto> findStock(String companyName) throws BankException {
-       if (companyName == null || companyName.isEmpty()) {
+        if (companyName == null || companyName.isEmpty()) {
             throw  new BankException("Stock Symbol is empty");
         }
-       String symbol = TradingServicesImpl.getPSQ("a").getSymbol();
-       System.out.println("The first symbol found: " + symbol);
-       /*
+
         List<StockDto> stockDtos = new ArrayList<StockDto>();
+
         try {
-            List<PublicStockQuote> stocks = new PublicStockQuote(); // TODO: Von Web Service Klasse holen
-            for (PublicStockQuote stock : stocks) {
+            List<PublicStockQuote> stockQuotes = TradingServicesImpl.getPSQ(companyName);
+            System.out.println("The first stock symbol found was: " + stockQuotes.get(0).getSymbol());
+            for (PublicStockQuote stock : stockQuotes) {
                 stockDtos.add(new StockDto(stock.getSymbol(), stock.getCompanyName(), stock.getLastTradePrice()));
             }
 
-
-        } catch (TradingWSException_Exception e) {
-            throw new BankException("An error occurred while fetching stocks: " + e.getMessage());
+        } catch (BankException e) {
+            System.err.println("Error fetching stocks: " + e.getMessage());
+            throw e;
         }
 
         return stockDtos;
-        */
-        return null;
     }
 
     @Override
