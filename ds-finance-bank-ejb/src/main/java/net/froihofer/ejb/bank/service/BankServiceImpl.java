@@ -52,8 +52,7 @@ public class BankServiceImpl implements BankService {
         customerDAO.persist(customer);
         System.out.println("New customer saved: " + customer);
 
-        System.out.println(customerDto.getFirstName() + "added!");
-
+        System.out.println(customerDto.getFirstName() + " added!");
     }
 
     @Override
