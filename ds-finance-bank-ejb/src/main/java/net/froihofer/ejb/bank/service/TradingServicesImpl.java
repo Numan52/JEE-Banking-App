@@ -6,8 +6,9 @@ import net.froihofer.dsfinance.ws.trading.api.PublicStockQuote;
 import net.froihofer.dsfinance.ws.trading.api.TradingWSException_Exception;
 import net.froihofer.dsfinance.ws.trading.api.TradingWebService;
 import net.froihofer.dsfinance.ws.trading.api.TradingWebServiceService;
+import net.froihofer.ejb.bank.entity.Bank;
 
-import java.util.ArrayList;
+import java.math.BigDecimal;
 import java.util.List;
 
 public class TradingServicesImpl {
@@ -33,12 +34,37 @@ public class TradingServicesImpl {
     }
 
     //Search for stock quotes based on a part of the company name.
-    public static List<PublicStockQuote> getPSQ(String symbol) throws BankException {
+    public static List<PublicStockQuote> getPSQByCompanyName(String partOfCompanyName) throws BankException {
         List<PublicStockQuote> publicStockQuoteList;
         try {
-            publicStockQuoteList = TradingServicesImpl.getTradingWebService().findStockQuotesByCompanyName(symbol);
+            publicStockQuoteList = TradingServicesImpl.getTradingWebService().findStockQuotesByCompanyName(partOfCompanyName);
         } catch (TradingWSException_Exception exception){
             throw new BankException("Could not retrieve stocks information.\n" + exception.getMessage());
+        }
+        return publicStockQuoteList;
+    }
+
+
+    public static BigDecimal buyStock(String symbol, int shares) throws BankException{
+        BigDecimal pricePerShare;
+        try {
+            pricePerShare = TradingServicesImpl.getTradingWebService().buy(symbol, shares);
+        } catch (TradingWSException_Exception e) {
+            System.err.println("Could not buy stock with symbol: " + symbol + "\n" + e.getMessage());
+            throw new BankException("Could not buy stock with symbol: " + symbol + "\n" + e.getMessage());
+        }
+
+        return pricePerShare;
+    }
+
+
+    public static List<PublicStockQuote> getPSQBySymbol(List<String> symbols) throws BankException {
+        List<PublicStockQuote> publicStockQuoteList;
+        try {
+            publicStockQuoteList = TradingServicesImpl.getTradingWebService().getStockQuotes(symbols);
+        } catch (TradingWSException_Exception e){
+            System.err.println("Could not get psq by symbol"  + e.getMessage());
+            throw new BankException("Could not retrieve stocks information.\n" + e.getMessage());
         }
         return publicStockQuoteList;
     }

@@ -10,12 +10,12 @@ import java.util.List;
 @Remote
 public interface BankService {
     public String getUserRole();
-    public void addCustomer(CustomerDto customerDto);
+    public String addCustomer(CustomerDto customerDto);
     public CustomerDto findCustomer(String customerId);
     public List<CustomerDto> findCustomerByName(String firstName, String lastName); // Multiple Customer can have same Name -> List<Customer>
     public List<StockDto> findStock(String companyName) throws BankException;
-    public BigDecimal  buyStock(long customerId, String stockSymbol, int shares);
-    public BigDecimal  sellStock(long customerId, String stockSymbol, int shares);
+    public String  buyStock(long customerId, String stockSymbol, int shares);
+    public String  sellStock(long customerId, String stockSymbol, int shares);
     public List<StockDto> getCustomerPortfolio(long customerId);
     public BigDecimal getInvestableVolume();
 }

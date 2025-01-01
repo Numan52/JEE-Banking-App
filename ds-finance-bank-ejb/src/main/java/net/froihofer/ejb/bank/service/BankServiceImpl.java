@@ -6,15 +6,18 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.ejb.SessionContext;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
+import jakarta.persistence.PersistenceException;
 import net.froihofer.common.BankException;
 import net.froihofer.common.BankService;
 import net.froihofer.common.dtos.CustomerDto;
 import net.froihofer.common.dtos.StockDto;
+import net.froihofer.ejb.bank.Utils.PSQHelper;
 import net.froihofer.ejb.bank.dao.BankDAO;
 import net.froihofer.ejb.bank.dao.CustomerDAO;
+import net.froihofer.ejb.bank.dao.StockDAO;
 import net.froihofer.ejb.bank.entity.Customer;
 import net.froihofer.dsfinance.ws.trading.api.PublicStockQuote;
-import net.froihofer.dsfinance.ws.trading.api.TradingWSException_Exception;
+import net.froihofer.ejb.bank.entity.Stock;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -31,6 +34,9 @@ public class BankServiceImpl implements BankService {
 
     @Inject
     BankDAO bankDAO;
+
+    @Inject
+    StockDAO stockDAO;
 
     @Override
     @RolesAllowed({"employee", "customer"})
@@ -49,13 +55,17 @@ public class BankServiceImpl implements BankService {
 
     @Override
     @RolesAllowed({"employee", "customer"})
-    public void addCustomer(CustomerDto customerDto) {
-        Customer customer = new Customer(customerDto.getFirstName(),customerDto.getLastName(),customerDto.getAddress());
-        System.out.println("Saving new customer...");
-        customerDAO.persist(customer);
-        System.out.println("New customer saved: " + customer);
+    public String addCustomer(CustomerDto customerDto) {
+        try {
+            Customer customer = new Customer(customerDto.getFirstName(),customerDto.getLastName(),customerDto.getAddress());
+            System.out.println("Saving new customer...");
+            customerDAO.persist(customer);
+            System.out.println("New customer saved: " + customer);
+        } catch (PersistenceException e) {
+            return "Error occurred while adding customer";
+        }
 
-        System.out.println(customerDto.getFirstName() + " added!");
+        return customerDto.getFirstName() + " added successfully!";
     }
 
     @Override
@@ -81,7 +91,7 @@ public class BankServiceImpl implements BankService {
         List<StockDto> stockDtos = new ArrayList<StockDto>();
 
         try {
-            List<PublicStockQuote> stockQuotes = TradingServicesImpl.getPSQ(companyName);
+            List<PublicStockQuote> stockQuotes = TradingServicesImpl.getPSQByCompanyName(companyName);
             System.out.println("The first stock symbol found was: " + stockQuotes.get(0).getSymbol());
             for (PublicStockQuote stock : stockQuotes) {
                 stockDtos.add(new StockDto(stock.getSymbol(), stock.getCompanyName(), stock.getLastTradePrice()));
@@ -97,14 +107,31 @@ public class BankServiceImpl implements BankService {
 
     @Override
     @RolesAllowed({"employee", "customer"})
-    public BigDecimal buyStock(long customerId, String stockSymbol, int shares) {
+    public String buyStock(long customerId, String stockSymbol, int shares) {
+        try {
+            Customer customer = customerDAO.findCustomerById(customerId);
 
-        return null;
+            List<PublicStockQuote> stocks = TradingServicesImpl.getPSQBySymbol(List.of(stockSymbol));
+            Stock stock = PSQHelper.psqToStock(stocks.get(0), customer, shares);
+            System.out.println(stocks.size());
+
+            stockDAO.persist(stock);
+
+            BigDecimal pricePerShare = TradingServicesImpl.buyStock(stockSymbol, shares);
+            // TODO: decrease available volume
+
+            return "Successfully bought " + shares + " shares for " + pricePerShare +
+                    " per share." ;
+
+        } catch (BankException e) {
+            return "Error occurred. Could not buy shares.";
+        }
+
     }
 
     @Override
     @RolesAllowed({"employee", "customer"})
-    public BigDecimal sellStock(long customerId, String stockSymbol, int shares) {
+    public String sellStock(long customerId, String stockSymbol, int shares) {
         return null;
     }
 

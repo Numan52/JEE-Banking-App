@@ -3,19 +3,23 @@ package net.froihofer.ejb.bank.entity;
 import jakarta.persistence.*;
 
 import java.io.Serializable;
+import java.util.List;
 
 @Entity
 @Table(name="CUSTOMERS")
 public class Customer implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private int customerId;
+    private long customerId;
 
     @Column(nullable = false)
     private String firstName;
 
     @Column(nullable = false)
     private String lastName;
+
+    @OneToMany(mappedBy = "customer")
+    private List<Stock> stocks;
 
     @Column
     private String address;
@@ -28,7 +32,7 @@ public class Customer implements Serializable {
         this.address = address;
     }
 
-    public int getCustomerId() {
+    public long getCustomerId() {
         return customerId;
     }
     public String getFirstName() {
@@ -39,5 +43,29 @@ public class Customer implements Serializable {
     }
     public String getAddress() {
         return address;
+    }
+
+    public void setCustomerId(long customerId) {
+        this.customerId = customerId;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public List<Stock> getStocks() {
+        return stocks;
+    }
+
+    public void setStocks(List<Stock> stocks) {
+        this.stocks = stocks;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 }

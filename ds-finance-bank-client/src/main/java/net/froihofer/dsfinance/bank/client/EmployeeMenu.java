@@ -36,6 +36,7 @@ public class EmployeeMenu {
                 break;
             case 4:
                 // TODO: implement method to buy stock for customer
+                buyStock(scanner, bankService);
                 break;
             case 5:
                 // TODO: implement method to sell stock for customer
@@ -50,6 +51,23 @@ public class EmployeeMenu {
                 System.out.println("Invalid input. Please try again.");
                 break;
         }
+    }
+
+    private void buyStock(Scanner scanner, BankService bankService) {
+        // test
+        System.out.println("+-----------------+-----------------+-----------------+");
+
+        System.out.println("Enter the symbol of the stock you wish to buy:");
+        String symbol = scanner.nextLine();
+
+        System.out.println("Enter the amount of shares you wish to buy: ");
+        int quantity = Integer.parseInt(scanner.nextLine());
+
+        System.out.println("Enter the customer id: ");
+        long customerId = Long.parseLong(scanner.nextLine());
+
+        String result = bankService.buyStock(customerId, symbol, quantity);
+        System.out.println(result);
     }
 
     public void addCustomer(Scanner scanner, BankService bankService){

@@ -29,6 +29,9 @@ public class StockDto implements Serializable {
         this.purchaseDate = purchaseDate;
     }
 
+
+
+
     public long getShareId() {
         return shareId;
     }
