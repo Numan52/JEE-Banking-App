@@ -26,12 +26,14 @@ public class CustomerDAO {
     public Customer findCustomerById(long id) throws BankException {
         try {
             Customer customer = entityManager.find(Customer.class, id);
+            if (customer == null) {
+                throw new BankException("Customer with id " + id + " not found");
+            }
             System.out.println("Customer found: " + customer);
             return customer;
-        } catch (PersistenceException e) {
-            System.err.println("Error finding Customer " + e.getMessage());
-            throw new BankException("Error finding Customer " + e.getMessage());
+        } catch (BankException e) {
+            System.err.println("No customer with id " + id + " found");
+            throw e;
         }
-
     }
 }

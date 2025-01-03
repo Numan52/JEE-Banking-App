@@ -10,7 +10,7 @@
   <properties>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
-    <wildfly.deploy.dir>C:\Programs\wildfly-28.0.1.Final-dev\standalone\deployments</wildfly.deploy.dir>
+    <wildfly.deploy.dir>C:\Program Files\Wildfly\wildfly-28.0.1.Final\standalone\deployments</wildfly.deploy.dir>
     <wildfly.version>28.0.1.Final</wildfly.version>
     <slf4j.version>2.0.5</slf4j.version>
     <commons-lang.version>3.12.0</commons-lang.version>
