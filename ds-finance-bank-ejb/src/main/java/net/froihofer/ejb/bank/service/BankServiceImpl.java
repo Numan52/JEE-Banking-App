@@ -7,6 +7,7 @@ import jakarta.ejb.SessionContext;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.PersistenceException;
+import jakarta.transaction.Transactional;
 import net.froihofer.common.BankException;
 import net.froihofer.common.BankService;
 import net.froihofer.common.dtos.CustomerDto;
@@ -15,6 +16,7 @@ import net.froihofer.ejb.bank.Utils.PSQHelper;
 import net.froihofer.ejb.bank.dao.BankDAO;
 import net.froihofer.ejb.bank.dao.CustomerDAO;
 import net.froihofer.ejb.bank.dao.StockDAO;
+import net.froihofer.ejb.bank.entity.Bank;
 import net.froihofer.ejb.bank.entity.Customer;
 import net.froihofer.dsfinance.ws.trading.api.PublicStockQuote;
 import net.froihofer.ejb.bank.entity.Stock;
@@ -77,8 +79,20 @@ public class BankServiceImpl implements BankService {
 
     @Override
     @RolesAllowed({"employee", "customer"})
-    public List<CustomerDto> findCustomerByName(String firstName, String lastName) {
-        return null;
+    public List<CustomerDto> findCustomerByName(String firstName, String lastName) throws BankException {
+        List<CustomerDto> customerDtos = new ArrayList<>();
+        List<Customer> customers = customerDAO.findCustomerByName(firstName, lastName);
+
+        for (Customer customer : customers) {
+            customerDtos.add(new CustomerDto(
+                    customer.getCustomerId(),
+                    customer.getFirstName(),
+                    customer.getLastName(),
+                    customer.getAddress()
+            ));
+        }
+
+        return customerDtos;
     }
 
     @Override
@@ -107,7 +121,8 @@ public class BankServiceImpl implements BankService {
 
     @Override
     @RolesAllowed({"employee", "customer"})
-    public String buyStock(long customerId, String stockSymbol, int shares) {
+    @Transactional
+    public String buyStock(long customerId, String stockSymbol, int shares) throws BankException{
         try {
             Customer customer = customerDAO.findCustomerById(customerId);
 
@@ -118,13 +133,16 @@ public class BankServiceImpl implements BankService {
             stockDAO.persist(stock);
 
             BigDecimal pricePerShare = TradingServicesImpl.buyStock(stockSymbol, shares);
-            // TODO: decrease available volume
+
+            BigDecimal totalCost = pricePerShare.multiply(new BigDecimal(shares));
+            BigDecimal availableVolume = bankDAO.getAvailableVolume();
+            bankDAO.updateAvailableVolume(availableVolume.subtract(totalCost));
 
             return "Successfully bought " + shares + " shares for " + pricePerShare +
                     " per share." ;
 
         } catch (BankException e) {
-            return "Error occurred. Could not buy shares.";
+            throw new BankException("Error occurred. Could not buy shares:  \n"  + e.getMessage());
         }
 
     }
@@ -143,7 +161,14 @@ public class BankServiceImpl implements BankService {
 
     @Override
     @RolesAllowed({"employee", "customer"})
-    public BigDecimal getInvestableVolume() {
-        return bankDAO.getAvailableVolume();
+    public BigDecimal getInvestableVolume() throws BankException {
+        try {
+            return bankDAO.getAvailableVolume();
+        } catch (PersistenceException e) {
+            System.err.println("Error getting investable volume: " + e);
+            e.printStackTrace();
+            throw new BankException("Error getting investable volume: " + e.getMessage());
+        }
+
     }
 }

@@ -15,7 +15,7 @@ public class BankDAO {
     @PersistenceContext
     private EntityManager entityManager;
 
-    public BigDecimal getAvailableVolume() {
+    public BigDecimal getAvailableVolume() throws PersistenceException {
         String queryString = "SELECT b.availableVolume FROM Bank b";
 
         try {
@@ -23,6 +23,22 @@ public class BankDAO {
             return query.getSingleResult();
         } catch (PersistenceException e) {
             System.err.println("Error getting available volume: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
+    }
+
+    public void updateAvailableVolume(BigDecimal availableVolume) {
+        String queryString = "UPDATE Bank b " +
+                "SET b.availableVolume = :availableVolume";
+
+        try {
+            entityManager.createQuery(queryString)
+                    .setParameter("availableVolume", availableVolume)
+                    .executeUpdate();
+        } catch (PersistenceException e) {
+            System.err.println("Error getting available volume: " + e.getMessage());
+            e.printStackTrace();
             throw e;
         }
     }

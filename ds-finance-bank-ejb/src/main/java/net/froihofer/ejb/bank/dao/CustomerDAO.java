@@ -8,6 +8,8 @@ import jakarta.persistence.Query;
 import net.froihofer.common.BankException;
 import net.froihofer.ejb.bank.entity.Customer;
 
+import java.util.List;
+
 @RequestScoped
 public class CustomerDAO {
     @PersistenceContext
@@ -34,6 +36,27 @@ public class CustomerDAO {
         } catch (BankException e) {
             System.err.println("No customer with id " + id + " found");
             throw e;
+        }
+    }
+
+    public List<Customer> findCustomerByName(String firstName, String lastName) throws BankException {
+        try {
+            String query = "SELECT c " +
+                    "FROM Customer c " +
+                    "WHERE LOWER(c.firstName) = LOWER(:firstName) AND LOWER(c.lastName) = LOWER(:lastName)";
+
+            List<Customer> customers = entityManager.createQuery(query, Customer.class)
+                    .setParameter("firstName", firstName)
+                    .setParameter("lastName", lastName)
+                    .getResultList();
+            if (customers.isEmpty()) {
+                throw new BankException("Customer with name " + firstName + " " + lastName + " not found");
+            }
+
+            return customers;
+        } catch (PersistenceException e) {
+            System.err.println(e + e.getMessage());
+            throw new BankException("Error getting customers by name: " + e.getMessage());
         }
     }
 }

@@ -35,6 +35,7 @@ public class Customer implements Serializable {
     public long getCustomerId() {
         return customerId;
     }
+
     public String getFirstName() {
         return firstName;
     }

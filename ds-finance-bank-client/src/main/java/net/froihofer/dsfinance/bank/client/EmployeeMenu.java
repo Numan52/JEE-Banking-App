@@ -4,8 +4,10 @@ import net.froihofer.common.BankException;
 import net.froihofer.common.BankService;
 import net.froihofer.common.dtos.CustomerDto;
 import net.froihofer.common.dtos.StockDto;
+import org.glassfish.jaxb.core.v2.TODO;
 
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -29,14 +31,14 @@ public class EmployeeMenu {
                 addCustomer(scanner, bankService);
                 break;
             case 2:
-                // TODO: implement method to find customer
+                Helper.findCustomer(scanner, bankService);
                 break;
             case 3:
                 findStock(scanner, bankService);
                 break;
             case 4:
                 // TODO: implement method to buy stock for customer
-                buyStock(scanner, bankService);
+                Helper.buyStock(scanner, bankService);
                 break;
             case 5:
                 // TODO: implement method to sell stock for customer
@@ -53,24 +55,12 @@ public class EmployeeMenu {
         }
     }
 
-    private void buyStock(Scanner scanner, BankService bankService) {
-        // test
-        System.out.println("+-----------------+-----------------+-----------------+");
 
-        System.out.println("Enter the symbol of the stock you wish to buy:");
-        String symbol = scanner.nextLine();
 
-        System.out.println("Enter the amount of shares you wish to buy: ");
-        int quantity = Integer.parseInt(scanner.nextLine());
 
-        System.out.println("Enter the customer id: ");
-        long customerId = Long.parseLong(scanner.nextLine());
 
-        String result = bankService.buyStock(customerId, symbol, quantity);
-        System.out.println(result);
-    }
 
-    public void addCustomer(Scanner scanner, BankService bankService){
+    public static void addCustomer(Scanner scanner, BankService bankService){
         System.out.println("+-----------------+-----------------+-----------------+");
         System.out.println("+--------------- Create a new customer ---------------");
         System.out.println("First Name");
@@ -85,28 +75,30 @@ public class EmployeeMenu {
     }
 
     //Search for stock quotes based on a part of the company name.
-    public void findStock(Scanner scanner, BankService bankService){
+    public static void findStock(Scanner scanner, BankService bankService){
         System.out.println("+-----------------+-----------------+-----------------+");
         System.out.println("+--------------- Find Stock ---------------");
         System.out.println("Part of Company Name: ");
         String companyName = scanner.nextLine();
 
-        try
-        {
-            List<StockDto> stocks = bankService.findStock(companyName);
-            System.out.println("Found stocks: ");
-            System.out.println("+-----------------+-----------------+-----------------+");
 
-            for (StockDto stock : stocks) {
-                System.out.println("Company Name: " + stock.getCompanyName());
-                System.out.println("Stock Symbol: " + stock.getStockSymbol());
-                System.out.println("Price per share: " + stock.getPricePerShare().setScale(2, RoundingMode.HALF_EVEN));
-                System.out.println("+-----------------+-----------------+");
-            }
-        }catch (BankException e)
-        {
+        List<StockDto> stocks = null;
+        try {
+            stocks = bankService.findStock(companyName);
+        } catch (BankException e) {
             System.out.println(e.getMessage());
+            return;
         }
+        System.out.println("Found stocks: ");
+        System.out.println("+-----------------+-----------------+-----------------+");
+
+        for (StockDto stock : stocks) {
+            System.out.println("Company Name: " + stock.getCompanyName());
+            System.out.println("Stock Symbol: " + stock.getStockSymbol());
+            System.out.println("Price per share: " + stock.getPricePerShare().setScale(2, RoundingMode.HALF_EVEN));
+            System.out.println("+-----------------+-----------------+");
+        }
+
 
     }
 
