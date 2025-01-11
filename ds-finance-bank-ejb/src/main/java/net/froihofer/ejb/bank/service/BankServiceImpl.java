@@ -12,6 +12,7 @@ import net.froihofer.common.BankException;
 import net.froihofer.common.BankService;
 import net.froihofer.common.dtos.CustomerDto;
 import net.froihofer.common.dtos.StockDto;
+import net.froihofer.dsfinance.ws.trading.api.TradingWSException_Exception;
 import net.froihofer.ejb.bank.Utils.PSQHelper;
 import net.froihofer.ejb.bank.dao.BankDAO;
 import net.froihofer.ejb.bank.dao.CustomerDAO;
@@ -22,8 +23,8 @@ import net.froihofer.dsfinance.ws.trading.api.PublicStockQuote;
 import net.froihofer.ejb.bank.entity.Stock;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Stateless(name = "BankService")
 @DeclareRoles({"customer", "employee"}) //RolesAllowed need to be changed at each methode!
@@ -44,6 +45,7 @@ public class BankServiceImpl implements BankService {
     @RolesAllowed({"employee", "customer"})
     public String getUserRole() // To get Role of client
     {
+        System.out.println("getUserRole"+ sessionContext.getCallerPrincipal().getName());
         if(sessionContext.isCallerInRole("customer"))
         {
             return "customer";
@@ -56,7 +58,7 @@ public class BankServiceImpl implements BankService {
     }
 
     @Override
-    @RolesAllowed({"employee", "customer"})
+    @RolesAllowed({"employee"})
     public String addCustomer(CustomerDto customerDto) {
         try {
             Customer customer = new Customer(customerDto.getFirstName(),customerDto.getLastName(),customerDto.getAddress());
@@ -71,14 +73,14 @@ public class BankServiceImpl implements BankService {
     }
 
     @Override
-    @RolesAllowed({"employee", "customer"})
+    @RolesAllowed({"employee"})
     public CustomerDto findCustomer(String customerId) {
 
         return null;
     }
 
     @Override
-    @RolesAllowed({"employee", "customer"})
+    @RolesAllowed({"employee"})
     public List<CustomerDto> findCustomerByName(String firstName, String lastName) throws BankException {
         List<CustomerDto> customerDtos = new ArrayList<>();
         List<Customer> customers = customerDAO.findCustomerByName(firstName, lastName);
@@ -156,6 +158,43 @@ public class BankServiceImpl implements BankService {
     @Override
     @RolesAllowed({"employee", "customer"})
     public List<StockDto> getCustomerPortfolio(long customerId) {
+        List<StockDto> customerStocks = new ArrayList<>();
+        try{
+            List<Stock> stocks = stockDAO.getAllStocks(customerId);
+            if (stocks != null)
+            {
+                Map<String, Integer> stockSummary = new HashMap<>();
+
+                for (Stock stock : stocks) {
+                    String symbol = stock.getStockSymbol();
+                    int quantity = stock.getQuantity();
+                    // addiere Anzahl zum aktuellen Wert in der mapliste
+                    stockSummary.put(symbol, stockSummary.getOrDefault(symbol, 0) + quantity);
+                }
+                List<String> stockSymbols = stocks.stream()
+                        .map(Stock::getStockSymbol) // holt symbol
+                        .distinct()
+                        .toList();
+
+                List<PublicStockQuote> currentvalues = TradingServicesImpl.getTradingWebService().getStockQuotes(stockSymbols);
+                for (Map.Entry<String, Integer> entry : stockSummary.entrySet()) {
+                    String symbol = entry.getKey();
+                    int totalQuantity = entry.getValue();
+
+                    for (PublicStockQuote stock : currentvalues) {
+                        if (symbol.equals(stock.getSymbol())) { // checkt ob symbol gleich ist
+                            customerStocks.add(new StockDto(customerId, stock.getSymbol(), stock.getCompanyName(), totalQuantity, stock.getLastTradePrice()));
+                            break; // Verlasse die innere Schleife, da das Symbol gefunden wurde
+                        }
+                    }
+                }
+                return customerStocks;
+            }
+        }catch (BankException e) {
+
+        } catch (TradingWSException_Exception e) {
+            throw new RuntimeException(e);
+        }
         return List.of();
     }
 

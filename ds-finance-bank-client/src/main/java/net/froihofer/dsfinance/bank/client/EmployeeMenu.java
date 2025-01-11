@@ -6,6 +6,7 @@ import net.froihofer.common.dtos.CustomerDto;
 import net.froihofer.common.dtos.StockDto;
 import org.glassfish.jaxb.core.v2.TODO;
 
+import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +45,7 @@ public class EmployeeMenu {
                 // TODO: implement method to sell stock for customer
                 break;
             case 6:
+                depo(scanner, bankService);
                 // TODO: implement method to list customer's deposit
                 break;
             case 7:
@@ -73,6 +75,23 @@ public class EmployeeMenu {
         String password = scanner.nextLine();
         bankService.addCustomer(new CustomerDto(firstName, lastName, address, password));
     }
+
+    public static void depo(Scanner scanner, BankService bankService){
+        System.out.println("+-----------------+-----------------+-----------------+");
+        System.out.println("+--------------- Get DEPO ---------------");
+        System.out.println("Customerid");
+        int customerid = Integer.parseInt(scanner.nextLine());
+        List<StockDto> stocks = bankService.getCustomerPortfolio(customerid);
+        BigDecimal total = BigDecimal.ZERO;
+        for (StockDto stock : stocks) {
+            BigDecimal currentValue = BigDecimal.valueOf(stock.getQuantity()) // Menge als BigDecimal
+                    .multiply(stock.getPricePerShare()); // Multipliziere mit Preis pro Aktie
+            System.out.println("Company: " + stock.getCompanyName() + ", Symbol: " + stock.getStockSymbol() + ", Quantity: " + stock.getQuantity() + ", Current Value: " + currentValue + ", Value per Share: " + stock.getPricePerShare());
+            total = total.add(currentValue);
+        }
+        System.out.println("Total: " + total);
+    }
+
 
     //Search for stock quotes based on a part of the company name.
     public static void findStock(Scanner scanner, BankService bankService){

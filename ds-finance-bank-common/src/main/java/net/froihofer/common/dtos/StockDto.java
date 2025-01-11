@@ -18,6 +18,13 @@ public class StockDto implements Serializable {
         this.companyName = companyName;
         this.pricePerShare = pricePerShare;
     }
+    public StockDto(long customerId, String stockSymbol, String companyName, int quantity, BigDecimal pricePerShare) {
+        this.customerId = customerId;
+        this.stockSymbol = stockSymbol;
+        this.companyName = companyName;
+        this.quantity = quantity;
+        this.pricePerShare = pricePerShare;
+    }
 
     public StockDto(long shareId, long customerId, String stockSymbol, String companyName, int quantity, BigDecimal pricePerShare, Date purchaseDate) {
         this.shareId = shareId;
