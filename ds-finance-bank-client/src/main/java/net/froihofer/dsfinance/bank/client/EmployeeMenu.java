@@ -49,6 +49,11 @@ public class EmployeeMenu {
                 // TODO: implement method to list customer's deposit
                 break;
             case 7:
+                try {
+                    bankService.getInvestableVolume();
+                }catch (BankException e){
+                    System.out.println(e.getMessage());
+                }
                 // TODO: implement method to look up investible bank volume
                 break;
             default:
