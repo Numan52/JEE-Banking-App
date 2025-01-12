@@ -17,7 +17,6 @@ import net.froihofer.ejb.bank.Utils.PSQHelper;
 import net.froihofer.ejb.bank.dao.BankDAO;
 import net.froihofer.ejb.bank.dao.CustomerDAO;
 import net.froihofer.ejb.bank.dao.StockDAO;
-import net.froihofer.ejb.bank.entity.Bank;
 import net.froihofer.ejb.bank.entity.Customer;
 import net.froihofer.dsfinance.ws.trading.api.PublicStockQuote;
 import net.froihofer.ejb.bank.entity.Stock;
@@ -45,7 +44,6 @@ public class BankServiceImpl implements BankService {
     @RolesAllowed({"employee", "customer"})
     public String getUserRole() // To get Role of client
     {
-        System.out.println("getUserRole"+ sessionContext.getCallerPrincipal().getName());
         if(sessionContext.isCallerInRole("customer"))
         {
             return "customer";
@@ -56,7 +54,20 @@ public class BankServiceImpl implements BankService {
         }
         return "Unauthorized!";
     }
-
+    @Override
+    @RolesAllowed({"employee", "customer"})
+    public long getCurrentUserId() // To get current userId
+    {
+        try {
+            String userIdString = sessionContext.getCallerPrincipal().getName();
+            return Long.parseLong(userIdString);
+        } catch (NumberFormatException e) {
+            // Fehlerbehandlung: Wenn der String keine gültige Zahl ist
+            System.err.println("Error: Unable to convert user ID to long. Input was: " + sessionContext.getCallerPrincipal().getName());
+            e.printStackTrace();
+            return -1;
+        }
+    }
     @Override
     @RolesAllowed({"employee"})
     public String addCustomer(CustomerDto customerDto) {
@@ -127,7 +138,12 @@ public class BankServiceImpl implements BankService {
     public String buyStock(long customerId, String stockSymbol, int shares) throws BankException{
         try {
             Customer customer = customerDAO.findCustomerById(customerId);
-
+            if(sessionContext.isCallerInRole("customer"))
+            {
+                if (Long.parseLong(sessionContext.getCallerPrincipal().getName()) != customerId) {
+                    throw new BankException("You are not allowed to buy stock for other customers.");
+                }
+            }
             List<PublicStockQuote> stocks = TradingServicesImpl.getPSQBySymbol(List.of(stockSymbol));
             Stock stock = PSQHelper.psqToStock(stocks.get(0), customer, shares);
             System.out.println(stocks.size());

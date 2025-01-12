@@ -5,7 +5,6 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.PersistenceException;
 import net.froihofer.common.BankException;
-import net.froihofer.ejb.bank.entity.Customer;
 import net.froihofer.ejb.bank.entity.Stock;
 
 import java.util.List;
@@ -38,8 +37,6 @@ public class StockDAO {
             } else {
                return stocks;
             }
-
-
         } catch (PersistenceException e) {
             System.err.println("Error saving stock: " + e.getMessage());
             throw new BankException("Error saving stock: " + e.getMessage());

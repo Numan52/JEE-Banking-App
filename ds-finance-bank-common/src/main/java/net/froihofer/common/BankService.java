@@ -9,13 +9,14 @@ import java.util.List;
 
 @Remote
 public interface BankService {
-    public String getUserRole();
-    public String addCustomer(CustomerDto customerDto);
-    public CustomerDto findCustomer(String customerId);
-    public List<CustomerDto> findCustomerByName(String firstName, String lastName) throws BankException; // Multiple Customer can have same Name -> List<Customer>
-    public List<StockDto> findStock(String companyName) throws BankException;
-    public String  buyStock(long customerId, String stockSymbol, int shares) throws BankException;
-    public String  sellStock(long customerId, String stockSymbol, int shares);
-    public List<StockDto> getCustomerPortfolio(long customerId);
-    public BigDecimal getInvestableVolume() throws BankException;
+     String getUserRole();
+     long getCurrentUserId();
+     String addCustomer(CustomerDto customerDto);
+     CustomerDto findCustomer(String customerId);
+     List<CustomerDto> findCustomerByName(String firstName, String lastName) throws BankException; // Multiple Customer can have same Name -> List<Customer>
+     List<StockDto> findStock(String companyName) throws BankException;
+     String  buyStock(long customerId, String stockSymbol, int shares) throws BankException;
+     String  sellStock(long customerId, String stockSymbol, int shares);
+     List<StockDto> getCustomerPortfolio(long customerId);
+     BigDecimal getInvestableVolume() throws BankException;
 }

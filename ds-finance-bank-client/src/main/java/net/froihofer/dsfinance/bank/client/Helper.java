@@ -3,10 +3,13 @@ package net.froihofer.dsfinance.bank.client;
 import net.froihofer.common.BankException;
 import net.froihofer.common.BankService;
 import net.froihofer.common.dtos.CustomerDto;
+import net.froihofer.common.dtos.StockDto;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.*;
+
+import static net.froihofer.dsfinance.bank.client.EmployeeMenu.findCustomer;
 
 public class Helper {
 
@@ -14,8 +17,8 @@ public class Helper {
         // test
         System.out.println("+-----------------+-----------------+-----------------+");
         long customerId = 0;
-
-        if (bankService.getUserRole().equals("employee")) {
+        String userRole = bankService.getUserRole();
+        if (userRole.equalsIgnoreCase("employee")) {
             System.out.println("Do you know the customers id?: Yes (y) | No (n)");
             String choice = scanner.nextLine().toLowerCase();
 
@@ -26,11 +29,13 @@ public class Helper {
             System.out.println("Enter customer id: ");
             customerId = Long.parseLong(scanner.nextLine());
 
-        } else {
-            // TODO: customer
+        }else if (userRole.equalsIgnoreCase("customer")) {
+            customerId = bankService.getCurrentUserId();
+            if (customerId == -1) {
+                System.out.println("Customer not found");
+                return;
+            }
         }
-
-
         System.out.println("Enter the symbol of the stock you wish to buy:");
         String symbol = scanner.nextLine();
 
@@ -48,25 +53,67 @@ public class Helper {
         System.out.println(result);
     }
 
-
-    public static void findCustomer(Scanner scanner, BankService bankService) {
+    //Search for stock quotes based on a part of the company name.
+    public static void findStock(Scanner scanner, BankService bankService){
         System.out.println("+-----------------+-----------------+-----------------+");
-        System.out.println("Enter first name of the customer: ");
-        String firstName = scanner.nextLine();
-        System.out.println("Enter last name of the customer: ");
-        String lastName = scanner.nextLine();
-        List<CustomerDto> customers = new ArrayList<>();
+        System.out.println("+--------------- Find Stock ---------------");
+        System.out.println("Part of Company Name: ");
+        String companyName = scanner.nextLine();
 
+        List<StockDto> stocks = null;
         try {
-            customers = bankService.findCustomerByName(firstName, lastName);
+            stocks = bankService.findStock(companyName);
         } catch (BankException e) {
             System.out.println(e.getMessage());
+            return;
         }
+        System.out.println("Found stocks: ");
+        System.out.println("+-----------------+-----------------+-----------------+");
 
-        for (CustomerDto customer : customers) {
-            System.out.println(customer);
+        for (StockDto stock : stocks) {
+            System.out.println("Company Name: " + stock.getCompanyName());
+            System.out.println("Stock Symbol: " + stock.getStockSymbol());
+            System.out.println("Price per share: " + stock.getPricePerShare().setScale(2, RoundingMode.HALF_EVEN));
             System.out.println("+-----------------+-----------------+");
         }
+    }
+    public static void viewDepo(Scanner scanner, BankService bankService){
+        System.out.println("+-----------------+-----------------+-----------------+");
+        System.out.println("+--------------- Get Portfolio ---------------");
+        long customerId = 0;
+        String userRole = bankService.getUserRole();
+        if (userRole.equalsIgnoreCase("employee")) {
+            System.out.println("Do you know the customers id?: Yes (y) | No (n)");
+            String choice = scanner.nextLine().toLowerCase();
 
+            if (choice.equals("n") || choice.equals("no")) {
+                findCustomer(scanner, bankService);
+            }
+
+            System.out.println("Enter customer id: ");
+            customerId = Long.parseLong(scanner.nextLine());
+
+        }else if (userRole.equalsIgnoreCase("customer")) {
+            customerId = bankService.getCurrentUserId();
+            if (customerId == -1) {
+                System.out.println("Customer not found");
+                return;
+            }
+        }
+        List<StockDto> stocks = bankService.getCustomerPortfolio(customerId);
+        BigDecimal total = BigDecimal.ZERO;
+        System.out.println("\n---Portfolio Overview---");
+        if(!stocks.isEmpty()){
+        for (StockDto stock : stocks) {
+            BigDecimal currentValue = BigDecimal.valueOf(stock.getQuantity()) // Menge als BigDecimal
+                    .multiply(stock.getPricePerShare()); // Multipliziere mit Preis pro Aktie
+            System.out.println("Company: " + stock.getCompanyName() + ", Symbol: " + stock.getStockSymbol() + ", Quantity: " + stock.getQuantity() + ", Current Value: " + currentValue + ", Value per Share: " + stock.getPricePerShare());
+            total = total.add(currentValue);
+        }
+        }else
+        {
+            System.out.println("Currently holding no Stocks");
+        }
+        System.out.println("Total Portfolio Value: " + total);
     }
 }
