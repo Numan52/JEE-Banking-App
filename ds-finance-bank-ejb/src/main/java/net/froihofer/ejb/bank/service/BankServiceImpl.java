@@ -85,20 +85,27 @@ public class BankServiceImpl implements BankService {
         } catch (PersistenceException e) {
             return "Error occurred while adding customer";
         }
-
         return customerDto.getFirstName() + " added successfully!";
     }
 
     @Override
     @RolesAllowed({"employee"})
-    public CustomerDto findCustomer(String customerId) {
+    public CustomerDto findCustomer(long customerId) throws BankException {
 
-        return null;
+        Customer customer = customerDAO.findCustomerById(customerId);
+        return new CustomerDto(customer.getCustomerId(), customer.getFirstName(), customer.getLastName(), customer.getAddress());
     }
 
     @Override
     @RolesAllowed({"employee"})
     public List<CustomerDto> findCustomerByName(String firstName, String lastName) throws BankException {
+        firstName = firstName.trim();
+        lastName = lastName.trim();
+        if(firstName.isEmpty() || lastName.isEmpty())
+        {
+            throw new BankException("First name and last name cannot be empty");
+        }
+
         List<CustomerDto> customerDtos = new ArrayList<>();
         List<Customer> customers = customerDAO.findCustomerByName(firstName, lastName);
 
@@ -125,6 +132,9 @@ public class BankServiceImpl implements BankService {
 
         try {
             List<PublicStockQuote> stockQuotes = TradingServicesImpl.getPSQByCompanyName(companyName);
+            if (stockQuotes.isEmpty()) {
+                throw new BankException("No stock found form " + companyName);
+            }
             System.out.println("The first stock symbol found was: " + stockQuotes.get(0).getSymbol());
             for (PublicStockQuote stock : stockQuotes) {
                 stockDtos.add(new StockDto(stock.getSymbol(), stock.getCompanyName(), stock.getLastTradePrice()));
@@ -184,9 +194,10 @@ public class BankServiceImpl implements BankService {
 
     @Override
     @RolesAllowed({"employee", "customer"})
-    public List<StockDto> getCustomerPortfolio(long customerId) {
+    public List<StockDto> getCustomerPortfolio(long customerId) throws BankException {
         List<StockDto> customerStocks = new ArrayList<>();
         try{
+            findCustomer(customerId); //check if user exist
             List<Stock> stocks = stockDAO.getAllStocks(customerId);
             if (stocks != null)
             {
@@ -217,10 +228,8 @@ public class BankServiceImpl implements BankService {
                 }
                 return customerStocks;
             }
-        }catch (BankException e) {
-
         } catch (TradingWSException_Exception e) {
-            throw new RuntimeException(e);
+            throw new BankException("Something went wrong while trying to get current values for shares from Trading Service " + e.getMessage());
         }
         return List.of();
     }

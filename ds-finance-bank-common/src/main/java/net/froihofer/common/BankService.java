@@ -12,11 +12,11 @@ public interface BankService {
      String getUserRole();
      long getCurrentUserId();
      String addCustomer(CustomerDto customerDto);
-     CustomerDto findCustomer(String customerId);
+     CustomerDto findCustomer(long customerId) throws BankException;
      List<CustomerDto> findCustomerByName(String firstName, String lastName) throws BankException; // Multiple Customer can have same Name -> List<Customer>
      List<StockDto> findStock(String companyName) throws BankException;
      String  buyStock(long customerId, String stockSymbol, int shares) throws BankException;
      String  sellStock(long customerId, String stockSymbol, int shares) throws BankException;
-     List<StockDto> getCustomerPortfolio(long customerId);
+     List<StockDto> getCustomerPortfolio(long customerId)  throws BankException;
      BigDecimal getInvestableVolume() throws BankException;
 }

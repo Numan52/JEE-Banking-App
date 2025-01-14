@@ -25,12 +25,10 @@ public class StockDAO {
     }
     public List<Stock> getAllStocks(long customerId) throws BankException {
         try {
-            // Erstellen der Query und Festlegen des Parameters
             List<Stock> stocks = entityManager.createQuery(
                             "SELECT c FROM Stock c WHERE c.customer.customerId = :customerId", Stock.class)
                     .setParameter("customerId", customerId)
                     .getResultList();
-            // Ergebnisse ausgeben
             if (stocks.isEmpty()) {
                 System.out.println("No stocks found for customer ID: " + customerId);
                 return null;

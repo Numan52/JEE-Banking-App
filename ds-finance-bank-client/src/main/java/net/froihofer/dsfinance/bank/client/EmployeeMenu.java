@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import static org.apache.commons.lang3.StringUtils.isNumeric;
+
 public class EmployeeMenu {
 
     public void employeeMenu(Scanner scanner, BankService bankService){
@@ -72,26 +74,57 @@ public class EmployeeMenu {
         bankService.addCustomer(new CustomerDto(firstName, lastName, address, password));
     }
     public static void findCustomer(Scanner scanner, BankService bankService) {
-        System.out.println("+-----------------+-----------------+-----------------+");
-        System.out.println("Enter first name of the customer: ");
-        String firstName = scanner.nextLine();
-        System.out.println("Enter last name of the customer: ");
-        String lastName = scanner.nextLine();
-        List<CustomerDto> customers = new ArrayList<>();
+        System.out.println("Would you like to search by customer ID or customer name?");
+        System.out.println("1: Search by Customer ID");
+        System.out.println("2: Search by Customer Name");
+        System.out.print("Enter your choice (1 or 2): ");
+        String choice = scanner.nextLine().toLowerCase();
+        switch (choice) {
+            case "1": //customerID
+                System.out.print("Please enter the customer ID: ");
+                String customerId = scanner.nextLine();
+                System.out.println("Searching for customer with ID: " + customerId);
+                try {
+                    if (isNumeric(customerId)) {
+                        long customerIdAsLong = Long.parseLong(customerId);
+                        CustomerDto customer = bankService.findCustomer(customerIdAsLong);
+                        System.out.println("+-----------------+-----------------+");
+                        System.out.println("CustomerID: " + customer.getCustomerId() + " | First Name: " + customer.getFirstName() + " | Last Name: " + customer.getLastName() + " | Address: " + customer.getAddress());
+                        System.out.println("+-----------------+-----------------+");
+                    } else {
+                        System.out.println("The Input is invalid, only numbers!");
+                        return;
+                    }
+                } catch (BankException e) {
+                    System.out.println(e.getMessage());
+                }
+                break;
+            case "2": //first and lastname
+                System.out.println("+-----------------+-----------------+-----------------+");
+                System.out.println("Enter first name of the customer: ");
+                String firstName = scanner.nextLine().toLowerCase();
+                System.out.println("Enter last name of the customer: ");
+                String lastName = scanner.nextLine().toLowerCase();
+                List<CustomerDto> customers = new ArrayList<>();
+                try {
+                    customers = bankService.findCustomerByName(firstName, lastName);
+                    for (CustomerDto customer : customers) {
+                        System.out.println("+-----------------+-----------------+");
+                        System.out.println("CustomerID: " + customer.getCustomerId() + " | First Name: " + customer.getFirstName() + " | Last Name: " + customer.getLastName() + " | Address: " + customer.getAddress());
+                        System.out.println("+-----------------+-----------------+");
+                    }
+                } catch (BankException e) {
+                    System.out.println(e.getMessage());
+                }
+                break;
+            default:
+                System.out.println("Invalid input. Please choose 1 or 2.");
+        }
 
-        try {
-            customers = bankService.findCustomerByName(firstName, lastName);
-        } catch (BankException e) {
-            System.out.println(e.getMessage());
-        }
-        for (CustomerDto customer : customers) {
-            System.out.println(customer);
-            System.out.println("+-----------------+-----------------+");
-        }
     }
     public static void investibleBanVolume(Scanner scanner, BankService bankService) {
         try {
-            System.out.println(bankService.getInvestableVolume());
+            System.out.println("The current investible Volume of the Bank is $" + bankService.getInvestableVolume());
         } catch (BankException e) {
             System.out.println(e.getMessage());
         }

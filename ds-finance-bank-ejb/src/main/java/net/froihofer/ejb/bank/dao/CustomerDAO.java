@@ -4,7 +4,6 @@ import jakarta.enterprise.context.RequestScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.PersistenceException;
-import jakarta.persistence.Query;
 import net.froihofer.common.BankException;
 import net.froihofer.ejb.bank.entity.Customer;
 
@@ -27,7 +26,7 @@ public class CustomerDAO {
 
     public Customer findCustomerById(long id) throws BankException {
         try {
-            Customer customer = entityManager.find(Customer.class, id);
+            Customer customer = entityManager.find(Customer.class, id); // automatically looks for primary key!
             if (customer == null) {
                 throw new BankException("Customer with id " + id + " not found");
             }

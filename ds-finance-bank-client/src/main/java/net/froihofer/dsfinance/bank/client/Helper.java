@@ -2,7 +2,6 @@ package net.froihofer.dsfinance.bank.client;
 
 import net.froihofer.common.BankException;
 import net.froihofer.common.BankService;
-import net.froihofer.common.dtos.CustomerDto;
 import net.froihofer.common.dtos.StockDto;
 
 import java.math.BigDecimal;
@@ -19,10 +18,10 @@ public class Helper {
         long customerId = 0;
         String userRole = bankService.getUserRole();
         if (userRole.equalsIgnoreCase("employee")) {
-            System.out.println("Do you know the customers id?: Yes (y) | No (n)");
+            System.out.println("Do you want to search for customers?: Yes (y) | No (n)");
             String choice = scanner.nextLine().toLowerCase();
 
-            if (choice.equals("n") || choice.equals("no")) {
+            if (choice.equals("y") || choice.equals("yes")) {
                 findCustomer(scanner, bankService);
             }
 
@@ -59,10 +58,10 @@ public class Helper {
         long customerId = 0;
         String userRole = bankService.getUserRole();
         if (userRole.equalsIgnoreCase("employee")) {
-            System.out.println("Do you know the customers id?: Yes (y) | No (n)");
+            System.out.println("Do you want to search for customers?: Yes (y) | No (n)");
             String choice = scanner.nextLine().toLowerCase();
 
-            if (choice.equals("n") || choice.equals("no")) {
+            if (choice.equals("y") || choice.equals("yes")) {
                 findCustomer(scanner, bankService);
             }
 
@@ -122,38 +121,46 @@ public class Helper {
         System.out.println("+--------------- Get Portfolio ---------------");
         long customerId = 0;
         String userRole = bankService.getUserRole();
-        if (userRole.equalsIgnoreCase("employee")) {
-            System.out.println("Do you know the customers id?: Yes (y) | No (n)");
-            String choice = scanner.nextLine().toLowerCase();
+        try {
+            if (userRole.equalsIgnoreCase("employee")) {
+                System.out.println("Do you want to search for customers?: Yes (y) | No (n)");
+                String choice = scanner.nextLine().toLowerCase();
 
-            if (choice.equals("n") || choice.equals("no")) {
-                findCustomer(scanner, bankService);
+                if (choice.equals("y") || choice.equals("yes")) {
+                    findCustomer(scanner, bankService);
+                }
+
+                System.out.println("Enter customer id: ");
+                customerId = Long.parseLong(scanner.nextLine());
+
+            } else if (userRole.equalsIgnoreCase("customer")) {
+                customerId = bankService.getCurrentUserId();
+                if (customerId == -1) {
+                    System.out.println("Customer not found");
+                    return;
+                }
             }
-
-            System.out.println("Enter customer id: ");
-            customerId = Long.parseLong(scanner.nextLine());
-
-        }else if (userRole.equalsIgnoreCase("customer")) {
-            customerId = bankService.getCurrentUserId();
-            if (customerId == -1) {
-                System.out.println("Customer not found");
-                return;
+        } catch (NumberFormatException e) {
+            System.out.println("The Input is invalid, only numbers!");
+        }
+        try {
+            List<StockDto> stocks = bankService.getCustomerPortfolio(customerId);
+            BigDecimal total = BigDecimal.ZERO;
+            System.out.println("\n---Portfolio Overview---");
+            if (!stocks.isEmpty()) {
+                for (StockDto stock : stocks) {
+                    BigDecimal currentValue = BigDecimal.valueOf(stock.getQuantity()) // Menge als BigDecimal
+                            .multiply(stock.getPricePerShare()); // Multipliziere mit Preis pro Aktie
+                    System.out.println("Company: " + stock.getCompanyName() + ", Symbol: " + stock.getStockSymbol() + ", Quantity: " + stock.getQuantity() + ", Current Value: " + currentValue + ", Value per Share: " + stock.getPricePerShare());
+                    total = total.add(currentValue);
+                }
+            } else {
+                System.out.println("Currently holding no Stocks");
             }
-        }
-        List<StockDto> stocks = bankService.getCustomerPortfolio(customerId);
-        BigDecimal total = BigDecimal.ZERO;
-        System.out.println("\n---Portfolio Overview---");
-        if(!stocks.isEmpty()){
-        for (StockDto stock : stocks) {
-            BigDecimal currentValue = BigDecimal.valueOf(stock.getQuantity()) // Menge als BigDecimal
-                    .multiply(stock.getPricePerShare()); // Multipliziere mit Preis pro Aktie
-            System.out.println("Company: " + stock.getCompanyName() + ", Symbol: " + stock.getStockSymbol() + ", Quantity: " + stock.getQuantity() + ", Current Value: " + currentValue + ", Value per Share: " + stock.getPricePerShare());
-            total = total.add(currentValue);
-        }
-        }else
+            System.out.println("Total Portfolio Value: " + total);
+        }catch (BankException e)
         {
-            System.out.println("Currently holding no Stocks");
+            System.out.println(e.getMessage());
         }
-        System.out.println("Total Portfolio Value: " + total);
     }
 }
