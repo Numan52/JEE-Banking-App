@@ -42,4 +42,23 @@ public class BankDAO {
             throw e;
         }
     }
+    public void createInitialBank() {
+        String queryString = "SELECT b FROM Bank b";
+        try {
+            // check if a bank entity exist
+            TypedQuery<Bank> query = entityManager.createQuery(queryString, Bank.class);
+            if (query.getResultList().isEmpty()) {
+                // bank doesn't exist
+                Bank bank = new Bank(new BigDecimal("1000000000"));
+                entityManager.persist(bank);
+                System.out.println("Initial Bank created with available volume: " + new BigDecimal("1000000000"));
+            } else {
+                System.out.println("Bank already exists, no action taken.");
+            }
+        } catch (PersistenceException e) {
+            System.err.println("Error creating initial bank: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
+    }
 }

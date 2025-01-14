@@ -1,5 +1,6 @@
 package net.froihofer.ejb.bank.service;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import jakarta.annotation.security.DeclareRoles;
 import jakarta.annotation.security.RolesAllowed;
@@ -39,6 +40,11 @@ public class BankServiceImpl implements BankService {
 
     @Inject
     StockDAO stockDAO;
+
+    @PostConstruct
+    private void initBank() {
+        bankDAO.createInitialBank();
+    }
 
     @Override
     @RolesAllowed({"employee", "customer"})
@@ -136,20 +142,25 @@ public class BankServiceImpl implements BankService {
     @RolesAllowed({"employee", "customer"})
     @Transactional
     public String buyStock(long customerId, String stockSymbol, int shares) throws BankException{
+        stockSymbol = stockSymbol.trim();
+        System.out.println("Stocksymbol: ." + stockSymbol + ".");
+
         try {
             Customer customer = customerDAO.findCustomerById(customerId);
-            if(sessionContext.isCallerInRole("customer"))
+            if(sessionContext.isCallerInRole("customer")) //checking if customer is not buying for other customer
             {
                 if (Long.parseLong(sessionContext.getCallerPrincipal().getName()) != customerId) {
                     throw new BankException("You are not allowed to buy stock for other customers.");
                 }
             }
             List<PublicStockQuote> stocks = TradingServicesImpl.getPSQBySymbol(List.of(stockSymbol));
+            if (stocks.isEmpty()) {
+                throw new BankException("No stock found for symbol: " + stockSymbol);
+            }
             Stock stock = PSQHelper.psqToStock(stocks.get(0), customer, shares);
             System.out.println(stocks.size());
 
             stockDAO.persist(stock);
-
             BigDecimal pricePerShare = TradingServicesImpl.buyStock(stockSymbol, shares);
 
             BigDecimal totalCost = pricePerShare.multiply(new BigDecimal(shares));
