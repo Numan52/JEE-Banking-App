@@ -53,6 +53,46 @@ public class Helper {
         System.out.println(result);
     }
 
+    public static void sellStock(Scanner scanner, BankService bankService) {
+        // test
+        System.out.println("+-----------------+-----------------+-----------------+");
+        long customerId = 0;
+        String userRole = bankService.getUserRole();
+        if (userRole.equalsIgnoreCase("employee")) {
+            System.out.println("Do you know the customers id?: Yes (y) | No (n)");
+            String choice = scanner.nextLine().toLowerCase();
+
+            if (choice.equals("n") || choice.equals("no")) {
+                findCustomer(scanner, bankService);
+            }
+
+            System.out.println("Enter customer id: ");
+            customerId = Long.parseLong(scanner.nextLine());
+
+        }else if (userRole.equalsIgnoreCase("customer")) {
+            customerId = bankService.getCurrentUserId();
+            if (customerId == -1) {
+                System.out.println("Customer not found");
+                return;
+            }
+        }
+        System.out.println("Enter the symbol of the stock you wish to sell:");
+        String symbol = scanner.nextLine();
+
+        System.out.println("Enter the amount of shares you wish to sell: ");
+        int quantity = Integer.parseInt(scanner.nextLine());
+
+
+        String result;
+        try {
+            result = bankService.sellStock(customerId, symbol, quantity);
+        } catch (BankException e) {
+            System.out.println(e.getMessage());
+            return;
+        }
+        System.out.println(result);
+    }
+
     //Search for stock quotes based on a part of the company name.
     public static void findStock(Scanner scanner, BankService bankService){
         System.out.println("+-----------------+-----------------+-----------------+");

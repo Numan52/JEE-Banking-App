@@ -40,7 +40,7 @@ public class EmployeeMenu {
                     Helper.buyStock(scanner, bankService);
                     break;
                 case 5:
-                    // TODO: implement method to sell stock for customer
+                    Helper.sellStock(scanner, bankService);
                     break;
                 case 6:
                     Helper.viewDepo(scanner, bankService);
