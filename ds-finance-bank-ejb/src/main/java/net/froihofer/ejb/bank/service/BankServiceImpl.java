@@ -18,6 +18,7 @@ import net.froihofer.ejb.bank.Utils.PSQHelper;
 import net.froihofer.ejb.bank.dao.BankDAO;
 import net.froihofer.ejb.bank.dao.CustomerDAO;
 import net.froihofer.ejb.bank.dao.StockDAO;
+import net.froihofer.ejb.bank.entity.Bank;
 import net.froihofer.ejb.bank.entity.Customer;
 import net.froihofer.dsfinance.ws.trading.api.PublicStockQuote;
 import net.froihofer.ejb.bank.entity.Stock;
@@ -66,6 +67,7 @@ public class BankServiceImpl implements BankService {
     {
         try {
             String userIdString = sessionContext.getCallerPrincipal().getName();
+            System.out.println("Userid String: " + userIdString);
             return Long.parseLong(userIdString);
         } catch (NumberFormatException e) {
             // Fehlerbehandlung: Wenn der String keine gültige Zahl ist
@@ -173,8 +175,17 @@ public class BankServiceImpl implements BankService {
             stockDAO.persist(stock);
             BigDecimal pricePerShare = TradingServicesImpl.buyStock(stockSymbol, shares);
 
+            stock.setPurchasePrice(pricePerShare);
+            stockDAO.update(stock);
+
             BigDecimal totalCost = pricePerShare.multiply(new BigDecimal(shares));
             BigDecimal availableVolume = bankDAO.getAvailableVolume();
+
+            if (totalCost.compareTo(availableVolume) > 0) {
+                throw new BankException();
+            }
+
+
             bankDAO.updateAvailableVolume(availableVolume.subtract(totalCost));
 
             return "Successfully bought " + shares + " shares for " + pricePerShare +
@@ -188,8 +199,64 @@ public class BankServiceImpl implements BankService {
 
     @Override
     @RolesAllowed({"employee", "customer"})
-    public String sellStock(long customerId, String stockSymbol, int shares) {
-        return null;
+    public String sellStock(long customerId, String stockSymbol, int shares) throws BankException {
+        if (shares <= 0) {
+            return "Enter a number of shares greater than 0.";
+        }
+        stockSymbol = stockSymbol.trim();
+
+        try {
+            Customer customer = customerDAO.findCustomerById(customerId);
+            if(sessionContext.isCallerInRole("customer"))
+            {
+                if (Long.parseLong(sessionContext.getCallerPrincipal().getName()) != customerId) {
+                    throw new BankException("You are not allowed to sell stocks for other customers.");
+                }
+            }
+
+            List<Stock> stocks = stockDAO.findStockByCustomer(stockSymbol, customer);
+            if (stocks.isEmpty()) {
+                throw new BankException("No stocks found for symbol: " + stockSymbol +
+                        "\n and user: " + customer.getFirstName());
+            }
+
+            int totalShares = stocks.stream()
+                                    .map((stock -> stock.getQuantity()))
+                                    .reduce(0, (a, b) -> a + b);
+
+            if (totalShares < shares) {
+                throw new BankException("You don't have enough shares to sell.");
+            }
+
+            BigDecimal pricePerShare = TradingServicesImpl.sellStock(stockSymbol, shares);
+
+            int sharesToSell = shares;
+
+            // stock entity löschen oder die share-Anzahl aktualisieren
+            for (Stock stock : stocks) {
+                if (sharesToSell == 0) break;
+
+                if (stock.getQuantity() <= sharesToSell) {
+                    sharesToSell -= stock.getQuantity();
+                    stockDAO.delete(stock);
+                } else {
+                    stock.setQuantity(stock.getQuantity() - sharesToSell);
+                    stockDAO.update(stock);
+                    sharesToSell = 0;
+
+                }
+            }
+
+            BigDecimal availableVolume = bankDAO.getAvailableVolume();
+            BigDecimal totalCost = pricePerShare.multiply(BigDecimal.valueOf(shares));
+            bankDAO.updateAvailableVolume(availableVolume.add(totalCost));
+
+            return "Successfully sold " + shares + " shares for " + pricePerShare +
+                    " per share." ;
+
+        } catch (BankException e) {
+            throw new BankException("Error occurred. Could not sell shares:  \n"  + e.getMessage());
+        }
     }
 
     @Override
