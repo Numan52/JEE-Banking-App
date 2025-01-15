@@ -26,8 +26,12 @@ public class EmployeeMenu {
             System.out.println("(7) Investible Bank Volume");
             System.out.println("(8) End");
             System.out.print("Enter a number: ");
-            input = scanner.nextInt();
-            scanner.nextLine(); // consuming the line break of nextint
+            if (scanner.hasNextInt()) {
+                input = scanner.nextInt();
+                scanner.nextLine();// consuming the line break of nextint
+            }else { // it is not a number
+                scanner.nextLine(); // consume the invalid input
+            }
             switch (input) {
                 case 1:
                     addCustomer(scanner, bankService);
