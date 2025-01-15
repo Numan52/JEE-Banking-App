@@ -82,53 +82,42 @@ public class BankServiceImpl implements BankService {
         }
     }
 
-    @Override
-    public String addCustomer(CustomerDto customerDto) {
-        return "";
-    }
 
 
     @Override
     @RolesAllowed({"employee"})
-    public long addCustomer(String firstname, String lastname, String address, String password) throws BankException {
-        if (firstname == null || firstname.isBlank()) {
-            throw new BankException("Firstname is empty!");
-        }
-        if (lastname == null || lastname.isBlank()) {
-            throw new BankException("Lastname is empty!");
-        }
-        if (address == null || address.isBlank()) {
-            throw new BankException("Address is empty!");
-        }
-        if (password == null || password.isBlank()) {
-            throw new BankException("Password is empty!");
-        }
+    public String addCustomer(CustomerDto customerDto) throws BankException {
 
         WildflyAuthDBHelper wildflyAuthDBHelper;
-        List<Customer> customerList = customerDAO.findCustomerByName(firstname, lastname);;
+        List<Customer> customerList = customerDAO.findCustomerByName(customerDto.getFirstName(), customerDto.getLastName());;
 
         try {
             for(Customer customer : customerList )
             {
-                if (Objects.equals(customer.getAddress(), address))
+                if (Objects.equals(customer.getAddress(), customerDto.getAddress()))
                 {
                     throw new BankException("Customer already exists at this address!");
                 }
             }
 
             if (customerList.isEmpty()) {
-                Customer customer = new Customer(firstname, lastname, address);
+                Customer customer = new Customer(customerDto.getFirstName(), customerDto.getLastName(), customerDto.getAddress());
                 customerDAO.persist(customer);
 
                 wildflyAuthDBHelper = new WildflyAuthDBHelper(new File(System.getenv("JBOSS_HOME")));
-                wildflyAuthDBHelper.addUser(String.valueOf(customer.getCustomerId()), password, new String[]{"customer"});
-                return customer.getCustomerId();
+                wildflyAuthDBHelper.addUser(String.valueOf(customer.getCustomerId()), customerDto.getPassword(), new String[]{"customer"});
+                return "Added " + customer.getCustomerId();
             } else {
                 throw new BankException("User already exists");
             }
         } catch (IOException | PersistenceException e) {
             throw new BankException("Could not add customer");
         }
+    }
+
+    @Override
+    public long addCustomer(String firstname, String lastname, String address, String password) throws BankException {
+        return 0;
     }
 
     @Override

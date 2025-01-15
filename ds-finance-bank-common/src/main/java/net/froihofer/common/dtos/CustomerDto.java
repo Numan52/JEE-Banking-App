@@ -35,7 +35,6 @@ public class CustomerDto implements Serializable {
 
 
 
-
     public long getCustomerId() {
         return customerId;
     }
@@ -67,6 +66,10 @@ public class CustomerDto implements Serializable {
     public void setAddress(String address) {
         this.address = address;
     }
+
+    public String getPassword() {return password;} //not so sure about access modifiers
+
+    public void setPassword(String password) {this.password = password;}
 
     @Override
     public String toString() {
