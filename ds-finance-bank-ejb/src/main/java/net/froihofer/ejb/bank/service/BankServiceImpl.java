@@ -30,6 +30,8 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
 
+import static java.lang.System.in;
+
 @Stateless(name = "BankService")
 @DeclareRoles({"customer", "employee"}) //RolesAllowed need to be changed at each methode!
 public class BankServiceImpl implements BankService {
@@ -106,6 +108,14 @@ public class BankServiceImpl implements BankService {
         List<Customer> customerList = customerDAO.findCustomerByName(firstname, lastname);;
 
         try {
+            for(Customer customer : customerList )
+            {
+                if (Objects.equals(customer.getAddress(), address))
+                {
+                    throw new BankException("Customer already exists at this address!");
+                }
+            }
+
             if (customerList.isEmpty()) {
                 Customer customer = new Customer(firstname, lastname, address);
                 customerDAO.persist(customer);
