@@ -133,10 +133,6 @@ public class BankServiceImpl implements BankService {
         }
     }
 
-    @Override
-    public long addCustomer(String firstname, String lastname, String address, String password) throws BankException {
-        return 0;
-    }
 
     @Override
     @RolesAllowed({"employee"})
@@ -209,6 +205,16 @@ public class BankServiceImpl implements BankService {
     @RolesAllowed({"employee", "customer"})
     @Transactional
     public String buyStock(long customerId, String stockSymbol, int shares) throws BankException{
+        if (stockSymbol == null || stockSymbol.isEmpty()) {
+            log.error("Stock symbol is empty");
+            throw new BankException("Stock symbol is empty");
+        }
+
+        if (shares < 0) {
+            log.error("Number of shares must be positive");
+            throw new BankException("Number of shares must be positive");
+        }
+
         stockSymbol = stockSymbol.trim();
         log.info("Attempting to buy stock. Customer ID: {}, Stock Symbol: {}, Shares: {}", customerId, stockSymbol, shares);
 
@@ -262,10 +268,17 @@ public class BankServiceImpl implements BankService {
     @Override
     @RolesAllowed({"employee", "customer"})
     public String sellStock(long customerId, String stockSymbol, int shares) throws BankException {
+        if (stockSymbol == null || stockSymbol.isEmpty()) {
+            log.error("Stock symbol is empty");
+            throw new BankException("Stock symbol is empty");
+        }
+
+
         if (shares <= 0) {
             log.warn("Invalid number of shares to sell: {}", shares);
             return "Enter a number of shares greater than 0.";
         }
+
 
         stockSymbol = stockSymbol.trim();
         log.info("Attempting to sell stock. Customer ID: {}, Stock Symbol: {}, Shares: {}", customerId, stockSymbol, shares);
