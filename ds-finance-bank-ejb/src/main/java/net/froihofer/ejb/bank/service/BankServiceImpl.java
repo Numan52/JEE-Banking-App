@@ -225,9 +225,9 @@ public class BankServiceImpl implements BankService {
                 throw new BankException("No stock found for symbol: " + stockSymbol);
             }
             Stock stock = PSQHelper.psqToStock(stocks.get(0), customer, shares);
-            stockDAO.persist(stock);
             BigDecimal totalCost = stock.getPurchasePrice().multiply(new BigDecimal(shares));
             BigDecimal availableVolume = bankDAO.getAvailableVolume();
+            log.info("totalcost: {} availableVolume {}", totalCost, availableVolume);
             if (totalCost.compareTo(availableVolume) > 0) {
                 log.error("Order exceeds available volume. Total Cost: {}, Available Volume: {}", totalCost, availableVolume);
                 throw new BankException("Your current order exceeds the bank's currently available volume.");
@@ -236,8 +236,7 @@ public class BankServiceImpl implements BankService {
             BigDecimal pricePerShare = TradingServicesImpl.buyStock(stockSymbol, shares);
 
             stock.setPurchasePrice(pricePerShare);
-            stockDAO.update(stock);
-
+            stockDAO.persist(stock);
 
             bankDAO.updateAvailableVolume(availableVolume.subtract(totalCost));
 
