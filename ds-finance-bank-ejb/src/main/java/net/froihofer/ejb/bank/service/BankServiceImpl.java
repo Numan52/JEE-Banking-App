@@ -167,7 +167,7 @@ public class BankServiceImpl implements BankService {
     @RolesAllowed({"employee", "customer"})
     public List<StockDto> findStock(String companyName) throws BankException {
         if (companyName == null || companyName.isEmpty()) {
-            log.error("Company name is empty.");
+            log.error("Company name is empty by findStock.");
             throw  new BankException("Stock Symbol is empty");
         }
 
@@ -377,7 +377,7 @@ public class BankServiceImpl implements BankService {
     }
 
     @Override
-    @RolesAllowed({"employee", "customer"})
+    @RolesAllowed({"employee"})
     public BigDecimal getInvestableVolume() throws BankException {
         try {
             return bankDAO.getAvailableVolume();
