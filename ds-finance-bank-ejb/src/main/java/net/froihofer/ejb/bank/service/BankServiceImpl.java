@@ -173,9 +173,9 @@ public class BankServiceImpl implements BankService {
         try {
             List<PublicStockQuote> stockQuotes = TradingServicesImpl.getPSQByCompanyName(companyName);
             if (stockQuotes.isEmpty()) {
-                throw new BankException("No stock found form " + companyName);
+                log.error("No stock found frOm {}", companyName);
+                throw new BankException("No stock found frOm " + companyName);
             }
-            System.out.println("The first stock symbol found was: " + stockQuotes.get(0).getSymbol());
             for (PublicStockQuote stock : stockQuotes) {
                 stockDtos.add(new StockDto(stock.getSymbol(), stock.getCompanyName(), stock.getLastTradePrice()));
             }
@@ -300,6 +300,7 @@ public class BankServiceImpl implements BankService {
     @Override
     @RolesAllowed({"employee", "customer"})
     public List<StockDto> getCustomerPortfolio(long customerId) throws BankException {
+        log.info("Getting Portfolio for customer {}", customerId);
         List<StockDto> customerStocks = new ArrayList<>();
             findCustomer(customerId); //check if user exist
             List<Stock> stocks = stockDAO.getAllStocks(customerId);
@@ -332,6 +333,9 @@ public class BankServiceImpl implements BankService {
                 }
                 return customerStocks;
             }
+        {
+            log.info("Customer {} has no stocks", customerId);
+        }
         return List.of();
     }
 
@@ -341,8 +345,7 @@ public class BankServiceImpl implements BankService {
         try {
             return bankDAO.getAvailableVolume();
         } catch (PersistenceException e) {
-            System.err.println("Error getting investable volume: " + e);
-            e.printStackTrace();
+            log.error("Error getting investable volume: {}", String.valueOf(e));
             throw new BankException("Error getting investable volume: " + e.getMessage());
         }
 
