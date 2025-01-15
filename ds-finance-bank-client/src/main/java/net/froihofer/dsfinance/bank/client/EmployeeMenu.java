@@ -78,6 +78,12 @@ public class EmployeeMenu {
             userId = bankService.addCustomer(firstName, lastName, address, password);
         } catch (BankException e) {
             System.out.println("Could not add customer: " + e.getMessage());
+            return;
+        }
+
+        if (userId == -1){
+            System.out.println("Could not add customer");
+            return;
         }
 
         System.out.println("Customer created successfully. The user id is: " + userId);
