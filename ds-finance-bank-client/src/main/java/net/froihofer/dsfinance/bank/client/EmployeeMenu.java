@@ -90,7 +90,7 @@ public class EmployeeMenu {
     }
 
 
-    public static void findCustomer(Scanner scanner, BankService bankService) {
+    public static int findCustomer(Scanner scanner, BankService bankService) {
         System.out.println("Would you like to search by customer ID or customer name?");
         System.out.println("1: Search by Customer ID");
         System.out.println("2: Search by Customer Name");
@@ -108,9 +108,10 @@ public class EmployeeMenu {
                         System.out.println("+-----------------+-----------------+");
                         System.out.println("CustomerID: " + customer.getCustomerId() + " | First Name: " + customer.getFirstName() + " | Last Name: " + customer.getLastName() + " | Address: " + customer.getAddress());
                         System.out.println("+-----------------+-----------------+");
+                        return 1;
                     } else {
                         System.out.println("The Input is invalid, only numbers!");
-                        return;
+                        return -1;
                     }
                 } catch (BankException e) {
                     System.out.println(e.getMessage());
@@ -129,6 +130,7 @@ public class EmployeeMenu {
                         System.out.println("+-----------------+-----------------+");
                         System.out.println("CustomerID: " + customer.getCustomerId() + " | First Name: " + customer.getFirstName() + " | Last Name: " + customer.getLastName() + " | Address: " + customer.getAddress());
                         System.out.println("+-----------------+-----------------+");
+                        return 1;
                     }
                 } catch (BankException e) {
                     System.out.println(e.getMessage());
@@ -136,8 +138,9 @@ public class EmployeeMenu {
                 break;
             default:
                 System.out.println("Invalid input. Please choose 1 or 2.");
+                return -1;
         }
-
+        return -1;
     }
     public static void investibleBanVolume(Scanner scanner, BankService bankService) {
         try {

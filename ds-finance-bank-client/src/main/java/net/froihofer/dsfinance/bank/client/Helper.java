@@ -76,7 +76,11 @@ public class Helper {
             String choice = scanner.nextLine().toLowerCase();
 
             if (choice.equals("y") || choice.equals("yes")) {
-                findCustomer(scanner, bankService);
+                int result = findCustomer(scanner, bankService);
+                if(result == -1)
+                {
+                    return -1;
+                }
             }
 
             System.out.println("Enter customer id: ");
@@ -120,29 +124,10 @@ public class Helper {
     public static void viewDepo(Scanner scanner, BankService bankService){
         System.out.println("+-----------------+-----------------+-----------------+");
         System.out.println("+--------------- Get Portfolio ---------------");
-        long customerId = 0;
-        String userRole = bankService.getUserRole();
-        try {
-            if (userRole.equalsIgnoreCase("employee")) {
-                System.out.println("Do you want to search for customers?: Yes (y) | No (n)");
-                String choice = scanner.nextLine().toLowerCase();
-
-                if (choice.equals("y") || choice.equals("yes")) {
-                    findCustomer(scanner, bankService);
-                }
-
-                System.out.println("Enter customer id: ");
-                customerId = Long.parseLong(scanner.nextLine());
-
-            } else if (userRole.equalsIgnoreCase("customer")) {
-                customerId = bankService.getCurrentUserId();
-                if (customerId == -1) {
-                    System.out.println("Customer not found");
-                    return;
-                }
-            }
-        } catch (NumberFormatException e) {
-            System.out.println("The Input is invalid, only numbers!");
+        long customerId = getCustomerId(scanner, bankService);
+        if (customerId == -1) {
+            System.out.println("Customer not found");
+            return;
         }
         try {
             List<StockDto> stocks = bankService.getCustomerPortfolio(customerId);

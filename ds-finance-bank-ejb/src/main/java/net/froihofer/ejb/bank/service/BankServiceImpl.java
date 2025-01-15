@@ -88,8 +88,6 @@ public class BankServiceImpl implements BankService {
         }
     }
 
-
-
     @Override
     @RolesAllowed({"employee"})
     public long addCustomer(CustomerDto customerDto) throws BankException {
@@ -131,11 +129,6 @@ public class BankServiceImpl implements BankService {
         } catch (IOException | PersistenceException e) {
             throw new BankException("Could not add customer");
         }
-    }
-
-    @Override
-    public long addCustomer(String firstname, String lastname, String address, String password) throws BankException {
-        return 0;
     }
 
     @Override
@@ -282,8 +275,7 @@ public class BankServiceImpl implements BankService {
             List<Stock> stocks = stockDAO.findStockByCustomer(stockSymbol, customer);
             if (stocks == null || stocks.isEmpty()) {
                 log.error("No stocks found for symbol: {} and customer ID: {}", stockSymbol, customerId);
-                throw new BankException("No stocks found for symbol: " + stockSymbol +
-                        "\n and user: " + customer.getFirstName());
+                throw new BankException("No stocks found for symbol: " + stockSymbol);
             }
 
             int totalShares = stocks.stream()
@@ -370,7 +362,7 @@ public class BankServiceImpl implements BankService {
     }
 
     @Override
-    @RolesAllowed({"employee", "customer"})
+    @RolesAllowed({"employee"})
     public BigDecimal getInvestableVolume() throws BankException {
         try {
             return bankDAO.getAvailableVolume();

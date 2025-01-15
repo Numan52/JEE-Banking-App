@@ -46,7 +46,7 @@ public class CustomerMenu {
         }
     }
     public static void buyStockforOtherCustomerTest(Scanner scanner, BankService bankService) {
-        // test
+        // check if customer can buy other customer stock
         System.out.println("+-----------------+-----------------+-----------------+");
         long customerId = 0;
         System.out.println("Enter customer id: ");
