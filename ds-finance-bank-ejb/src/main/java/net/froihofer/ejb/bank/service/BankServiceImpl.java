@@ -165,14 +165,17 @@ public class BankServiceImpl implements BankService {
     @RolesAllowed({"employee", "customer"})
     public List<StockDto> findStock(String companyName) throws BankException {
         if (companyName == null || companyName.isEmpty()) {
+            log.error("Company name is empty.");
             throw  new BankException("Stock Symbol is empty");
         }
 
+        log.info("Attempting to find stocks for company: {}", companyName);
         List<StockDto> stockDtos = new ArrayList<StockDto>();
 
         try {
             List<PublicStockQuote> stockQuotes = TradingServicesImpl.getPSQByCompanyName(companyName);
             if (stockQuotes.isEmpty()) {
+                log.error("No stock found for company: {}", companyName);
                 throw new BankException("No stock found form " + companyName);
             }
             System.out.println("The first stock symbol found was: " + stockQuotes.get(0).getSymbol());
@@ -185,6 +188,7 @@ public class BankServiceImpl implements BankService {
             throw e;
         }
 
+        log.info("Found {} stocks for company: {}", stockDtos.size(), companyName);
         return stockDtos;
     }
 
@@ -193,7 +197,8 @@ public class BankServiceImpl implements BankService {
     @Transactional
     public String buyStock(long customerId, String stockSymbol, int shares) throws BankException{
         stockSymbol = stockSymbol.trim();
-        System.out.println("Stocksymbol: ." + stockSymbol + ".");
+        log.info("Attempting to buy stock. Customer ID: {}, Stock Symbol: {}, Shares: {}", customerId, stockSymbol, shares);
+
 
         try {
             Customer customer = customerDAO.findCustomerById(customerId);
@@ -205,8 +210,10 @@ public class BankServiceImpl implements BankService {
             }
             List<PublicStockQuote> stocks = TradingServicesImpl.getPSQBySymbol(List.of(stockSymbol));
             if (stocks == null || stocks.isEmpty()) {
+                log.error("No stock found for symbol: {}", stockSymbol);
                 throw new BankException("No stock found for symbol: " + stockSymbol);
             }
+
             Stock stock = PSQHelper.psqToStock(stocks.get(0), customer, shares);
             System.out.println(stocks.size());
 
@@ -215,6 +222,7 @@ public class BankServiceImpl implements BankService {
             BigDecimal totalCost = stock.getPurchasePrice().multiply(new BigDecimal(shares));
             BigDecimal availableVolume = bankDAO.getAvailableVolume();
             if (totalCost.compareTo(availableVolume) > 0) {
+                log.error("Order exceeds available volume. Total Cost: {}, Available Volume: {}", totalCost, availableVolume);
                 throw new BankException("Your current order exceeds the bank's currently available volume.");
             }
 
@@ -226,10 +234,13 @@ public class BankServiceImpl implements BankService {
 
             bankDAO.updateAvailableVolume(availableVolume.subtract(totalCost));
 
+            log.info("Successfully bought {} shares of {} for {} per share.", shares, stockSymbol, pricePerShare);
+
             return "Successfully bought " + shares + " shares for " + pricePerShare +
-                    " per share." ;
+                    " per share.";
 
         } catch (BankException e) {
+            log.error("Error buying stock: {}", e.getMessage(), e);
             throw new BankException("Error occurred. Could not buy shares:  \n"  + e.getMessage());
         }
 
@@ -239,9 +250,12 @@ public class BankServiceImpl implements BankService {
     @RolesAllowed({"employee", "customer"})
     public String sellStock(long customerId, String stockSymbol, int shares) throws BankException {
         if (shares <= 0) {
+            log.warn("Invalid number of shares to sell: {}", shares);
             return "Enter a number of shares greater than 0.";
         }
+
         stockSymbol = stockSymbol.trim();
+        log.info("Attempting to sell stock. Customer ID: {}, Stock Symbol: {}, Shares: {}", customerId, stockSymbol, shares);
 
         try {
             Customer customer = customerDAO.findCustomerById(customerId);
@@ -254,6 +268,7 @@ public class BankServiceImpl implements BankService {
 
             List<Stock> stocks = stockDAO.findStockByCustomer(stockSymbol, customer);
             if (stocks == null || stocks.isEmpty()) {
+                log.error("No stocks found for symbol: {} and customer ID: {}", stockSymbol, customerId);
                 throw new BankException("No stocks found for symbol: " + stockSymbol +
                         "\n and user: " + customer.getFirstName());
             }
@@ -263,6 +278,7 @@ public class BankServiceImpl implements BankService {
                                     .reduce(0, (a, b) -> a + b);
 
             if (totalShares < shares) {
+                log.error("Not enough shares to sell. Total Shares: {}, Requested: {}", totalShares, shares);
                 throw new BankException("You don't have enough shares to sell.");
             }
 
@@ -289,6 +305,7 @@ public class BankServiceImpl implements BankService {
             BigDecimal totalCost = pricePerShare.multiply(BigDecimal.valueOf(shares));
             bankDAO.updateAvailableVolume(availableVolume.add(totalCost));
 
+            log.info("Successfully sold {} shares of {} for {} per share.", shares, stockSymbol, pricePerShare);
             return "Successfully sold " + shares + " shares for " + pricePerShare +
                     " per share." ;
 
