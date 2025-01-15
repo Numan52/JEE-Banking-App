@@ -217,17 +217,17 @@ public class BankServiceImpl implements BankService {
             System.out.println(stocks.size());
 
             stockDAO.persist(stock);
+
+            BigDecimal totalCost = stock.getPurchasePrice().multiply(new BigDecimal(shares));
+            BigDecimal availableVolume = bankDAO.getAvailableVolume();
+            if (totalCost.compareTo(availableVolume) > 0) {
+                throw new BankException("Your current order exceeds the bank's currently available volume.");
+            }
+
             BigDecimal pricePerShare = TradingServicesImpl.buyStock(stockSymbol, shares);
 
             stock.setPurchasePrice(pricePerShare);
             stockDAO.update(stock);
-
-            BigDecimal totalCost = pricePerShare.multiply(new BigDecimal(shares));
-            BigDecimal availableVolume = bankDAO.getAvailableVolume();
-
-            if (totalCost.compareTo(availableVolume) > 0) {
-                throw new BankException();
-            }
 
 
             bankDAO.updateAvailableVolume(availableVolume.subtract(totalCost));
