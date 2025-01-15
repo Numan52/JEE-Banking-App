@@ -47,7 +47,7 @@ public class BankServiceImpl implements BankService {
 
     private static final Logger log = LoggerFactory.getLogger(BankServiceImpl.class);
 
-    @PostConstruct
+    @PostConstruct // automatically called after dependency injection to initialize the bank
     private void initBank() {
         bankDAO.createInitialBank();
     }
@@ -76,7 +76,7 @@ public class BankServiceImpl implements BankService {
             String userIdString = sessionContext.getCallerPrincipal().getName();
             return Long.parseLong(userIdString);
         } catch (NumberFormatException e) {
-            log.error("Error: Unable to convert user ID to long. Input was: {}", sessionContext.getCallerPrincipal().getName()); // Fehlerbehandlung: Wenn der String keine gültige Zahl ist
+            log.error("Error: Unable to convert user ID to long. Input was: {}", sessionContext.getCallerPrincipal().getName()); // wenn der string keine gültige Zahl ist
             return -1;
         }
     }
@@ -84,6 +84,7 @@ public class BankServiceImpl implements BankService {
     @Override
     @RolesAllowed({"employee"})
     public long addCustomer(CustomerDto customerDto) throws BankException {
+        log.info("Adding new customer");
         if (customerDto.getFirstName() == null || customerDto.getFirstName().isBlank()) {
             throw new BankException("Firstname is empty!");
         }
@@ -99,7 +100,7 @@ public class BankServiceImpl implements BankService {
         customerDto.setFirstName(customerDto.getFirstName().trim());
         customerDto.setLastName(customerDto.getLastName().trim());
         customerDto.setAddress(customerDto.getAddress().trim());
-
+        log.info("Customer details are valid");
 
         WildflyAuthDBHelper wildflyAuthDBHelper;
         List<Customer> customerList = customerDAO.findCustomerByName(customerDto.getFirstName(), customerDto.getLastName());;
@@ -107,8 +108,9 @@ public class BankServiceImpl implements BankService {
         try {
             for(Customer customer : customerList )
             {
-                if (Objects.equals(customer.getAddress(), customerDto.getAddress()))
+                if (Objects.equals(customer.getAddress().toLowerCase(), customerDto.getAddress().toLowerCase()))
                 {
+                    log.error("Customer already exists");
                     throw new BankException("Customer already exists with this address!");
                 }
             }
@@ -116,9 +118,11 @@ public class BankServiceImpl implements BankService {
             customerDAO.persist(customer);
             wildflyAuthDBHelper = new WildflyAuthDBHelper(new File(System.getenv("JBOSS_HOME")));
             wildflyAuthDBHelper.addUser(String.valueOf(customer.getCustomerId()), customerDto.getPassword(), new String[]{"customer"});
+            log.info("Customer added successfully id={}", customer.getCustomerId());
             return customer.getCustomerId();
 
         } catch (IOException | PersistenceException e) {
+            log.error("Error while adding customer: {}", e.getMessage());
             throw new BankException("Could not add customer");
         }
     }
@@ -126,6 +130,7 @@ public class BankServiceImpl implements BankService {
     @Override
     @RolesAllowed({"employee"})
     public CustomerDto findCustomer(long customerId) throws BankException {
+        log.info("searching for customer with ID={}", customerId);
         Customer customer = customerDAO.findCustomerById(customerId);
         return new CustomerDto(customer.getCustomerId(), customer.getFirstName(), customer.getLastName(), customer.getAddress());
     }
@@ -133,7 +138,6 @@ public class BankServiceImpl implements BankService {
     @Override
     @RolesAllowed({"employee"})
     public List<CustomerDto> findCustomerByName(String firstName, String lastName) throws BankException {
-
         if (firstName == null || firstName.isBlank()) {
             throw new BankException("Firstname is empty!");
         }
@@ -148,7 +152,6 @@ public class BankServiceImpl implements BankService {
         if (customers.isEmpty()) {
             throw new BankException("No customers found");
         }
-
         for (Customer customer : customers) {
             customerDtos.add(new CustomerDto(
                     customer.getCustomerId(),
@@ -157,7 +160,6 @@ public class BankServiceImpl implements BankService {
                     customer.getAddress()
             ));
         }
-
         return customerDtos;
     }
 
