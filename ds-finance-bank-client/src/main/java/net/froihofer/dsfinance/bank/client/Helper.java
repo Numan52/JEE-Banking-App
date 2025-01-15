@@ -22,8 +22,13 @@ public class Helper {
         System.out.println("Enter the symbol of the stock you wish to buy:");
         String symbol = scanner.nextLine();
 
-        System.out.println("Enter the amount of shares you wish to buy: ");
-        int quantity = Integer.parseInt(scanner.nextLine());
+        int quantity = 0;
+        try {
+            System.out.println("Enter the amount of shares you wish to buy: ");
+            quantity = Integer.parseInt(scanner.nextLine());
+        } catch (NumberFormatException e) {
+            System.out.println("Enter a valid number of shares you wish to buy");
+        }
 
 
         String result;

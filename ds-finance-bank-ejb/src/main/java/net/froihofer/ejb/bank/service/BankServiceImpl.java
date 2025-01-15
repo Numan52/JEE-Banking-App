@@ -92,7 +92,20 @@ public class BankServiceImpl implements BankService {
 
     @Override
     @RolesAllowed({"employee"})
-    public String addCustomer(CustomerDto customerDto) throws BankException {
+    public long addCustomer(CustomerDto customerDto) throws BankException {
+        if (customerDto.getFirstName() == null ||customerDto.getFirstName().isBlank()) {
+            throw new BankException("Firstname is empty!");
+        }
+        if (customerDto.getLastName() == null ||customerDto.getLastName().isBlank()) {
+            throw new BankException("Lastname is empty!");
+        }
+        if (customerDto.getAddress() == null ||customerDto.getAddress().isBlank()) {
+            throw new BankException("Address is empty!");
+        }
+        if (customerDto.getPassword() == null ||customerDto.getPassword().isBlank()) {
+            throw new BankException("Password is empty!");
+        }
+
 
         WildflyAuthDBHelper wildflyAuthDBHelper;
         List<Customer> customerList = customerDAO.findCustomerByName(customerDto.getFirstName(), customerDto.getLastName());;
@@ -111,18 +124,13 @@ public class BankServiceImpl implements BankService {
                 customerDAO.persist(customer);
                 wildflyAuthDBHelper = new WildflyAuthDBHelper(new File(System.getenv("JBOSS_HOME")));
                 wildflyAuthDBHelper.addUser(String.valueOf(customer.getCustomerId()), customerDto.getPassword(), new String[]{"customer"});
-                return "Added " + customer.getCustomerId();
+                return customer.getCustomerId();
             } else {
                 throw new BankException("User already exists");
             }
         } catch (IOException | PersistenceException e) {
             throw new BankException("Could not add customer");
         }
-    }
-
-    @Override
-    public long addCustomer(String firstname, String lastname, String address, String password) throws BankException {
-        return 0;
     }
 
     @Override
@@ -211,17 +219,17 @@ public class BankServiceImpl implements BankService {
             System.out.println(stocks.size());
 
             stockDAO.persist(stock);
+
+            BigDecimal totalCost = stock.getPurchasePrice().multiply(new BigDecimal(shares));
+            BigDecimal availableVolume = bankDAO.getAvailableVolume();
+            if (totalCost.compareTo(availableVolume) > 0) {
+                throw new BankException("Your current order exceeds the bank's currently available volume.");
+            }
+
             BigDecimal pricePerShare = TradingServicesImpl.buyStock(stockSymbol, shares);
 
             stock.setPurchasePrice(pricePerShare);
             stockDAO.update(stock);
-
-            BigDecimal totalCost = pricePerShare.multiply(new BigDecimal(shares));
-            BigDecimal availableVolume = bankDAO.getAvailableVolume();
-
-            if (totalCost.compareTo(availableVolume) > 0) {
-                throw new BankException();
-            }
 
 
             bankDAO.updateAvailableVolume(availableVolume.subtract(totalCost));
