@@ -4,6 +4,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import jakarta.annotation.security.DeclareRoles;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.ejb.EJBException;
 import jakarta.ejb.SessionContext;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
@@ -21,10 +22,12 @@ import net.froihofer.ejb.bank.dao.StockDAO;
 import net.froihofer.ejb.bank.entity.Customer;
 import net.froihofer.dsfinance.ws.trading.api.PublicStockQuote;
 import net.froihofer.ejb.bank.entity.Stock;
+import net.froihofer.util.jboss.WildflyAuthDBHelper;
 
+import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Stateless(name = "BankService")
 @DeclareRoles({"customer", "employee"}) //RolesAllowed need to be changed at each methode!
@@ -74,9 +77,55 @@ public class BankServiceImpl implements BankService {
             return -1;
         }
     }
+
     @Override
-    @RolesAllowed({"employee"})
     public String addCustomer(CustomerDto customerDto) {
+        return "";
+    }
+
+    @RolesAllowed({"employee"})
+    @Override
+    public void addCustomer(String username, String firstname, String lastname, String address, String password) throws BankException {
+        if (username == null || username.isBlank()) {
+            throw new BankException("Username is empty!");
+        }
+        if (firstname == null || firstname.isBlank()) {
+            throw new BankException("Firstname is empty!");
+        }
+        if (lastname == null || lastname.isBlank()) {
+            throw new BankException("Lastname is empty!");
+        }
+        if (address == null || address.isBlank()) {
+            throw new BankException("Address is empty!");
+        }
+        if (password == null || password.isBlank()) {
+            throw new BankException("Password is empty!");
+        }
+
+        WildflyAuthDBHelper wildflyAuthDBHelper;
+        List<Customer> customerList;
+
+        try {
+            customerList = customerDAO.findCustomerByName(firstname, lastname);
+        } catch (EJBException ex) {
+            throw new BankException("Error " + ex);
+        }
+
+
+        try {
+            if (customerList.isEmpty()) {
+                customerDAO.persist(new Customer(username, lastname, address));
+                wildflyAuthDBHelper = new WildflyAuthDBHelper(new File(System.getenv("JBOSS_HOME")));
+                wildflyAuthDBHelper.addUser(username, password, new String[]{getUserRole()});
+                //return "User successfully added!";
+            } else {
+                throw new BankException("User already exists");
+            }
+        } catch (IOException iox) {
+            throw new BankException("Error" + iox);
+        }
+
+        /*
         try {
             Customer customer = new Customer(customerDto.getFirstName(),customerDto.getLastName(),customerDto.getAddress());
             System.out.println("Saving new customer...");
@@ -86,6 +135,8 @@ public class BankServiceImpl implements BankService {
             return "Error occurred while adding customer";
         }
         return customerDto.getFirstName() + " added successfully!";
+        */
+
     }
 
     @Override

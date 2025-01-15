@@ -1,5 +1,6 @@
 package net.froihofer.common;
 
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.ejb.Remote;
 import net.froihofer.common.dtos.CustomerDto;
 import net.froihofer.common.dtos.StockDto;
@@ -12,6 +13,10 @@ public interface BankService {
      String getUserRole();
      long getCurrentUserId();
      String addCustomer(CustomerDto customerDto);
+
+     @RolesAllowed({"employee"})
+     void addCustomer(String username, String firstname, String lastname, String address, String password) throws BankException;
+
      CustomerDto findCustomer(long customerId) throws BankException;
      List<CustomerDto> findCustomerByName(String firstName, String lastName) throws BankException; // Multiple Customer can have same Name -> List<Customer>
      List<StockDto> findStock(String companyName) throws BankException;
