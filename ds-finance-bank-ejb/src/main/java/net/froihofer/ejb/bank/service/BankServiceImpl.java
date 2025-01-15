@@ -5,6 +5,8 @@ import jakarta.annotation.Resource;
 import jakarta.annotation.security.DeclareRoles;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.ejb.EJBException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import jakarta.ejb.SessionContext;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
@@ -47,6 +49,8 @@ public class BankServiceImpl implements BankService {
     @Inject
     StockDAO stockDAO;
 
+    private static final Logger log = LoggerFactory.getLogger(BankServiceImpl.class);
+
     @PostConstruct
     private void initBank() {
         bankDAO.createInitialBank();
@@ -56,6 +60,7 @@ public class BankServiceImpl implements BankService {
     @RolesAllowed({"employee", "customer"})
     public String getUserRole() // To get Role of client
     {
+        log.info("Getting Role for User: {}", getCurrentUserId());
         if(sessionContext.isCallerInRole("customer"))
         {
             return "customer";
@@ -64,7 +69,8 @@ public class BankServiceImpl implements BankService {
         {
             return "employee";
         }
-        return "Unauthorized!";
+        log.error("User {} has not role 'customer' or 'employee'", getCurrentUserId());
+        return "Unauthorized!"; //exception?
     }
     @Override
     @RolesAllowed({"employee", "customer"})
@@ -82,53 +88,41 @@ public class BankServiceImpl implements BankService {
         }
     }
 
-    @Override
-    public String addCustomer(CustomerDto customerDto) {
-        return "";
-    }
 
 
     @Override
     @RolesAllowed({"employee"})
-    public long addCustomer(String firstname, String lastname, String address, String password) throws BankException {
-        if (firstname == null || firstname.isBlank()) {
-            throw new BankException("Firstname is empty!");
-        }
-        if (lastname == null || lastname.isBlank()) {
-            throw new BankException("Lastname is empty!");
-        }
-        if (address == null || address.isBlank()) {
-            throw new BankException("Address is empty!");
-        }
-        if (password == null || password.isBlank()) {
-            throw new BankException("Password is empty!");
-        }
+    public String addCustomer(CustomerDto customerDto) throws BankException {
 
         WildflyAuthDBHelper wildflyAuthDBHelper;
-        List<Customer> customerList = customerDAO.findCustomerByName(firstname, lastname);;
+        List<Customer> customerList = customerDAO.findCustomerByName(customerDto.getFirstName(), customerDto.getLastName());;
 
         try {
             for(Customer customer : customerList )
             {
-                if (Objects.equals(customer.getAddress(), address))
+                if (Objects.equals(customer.getAddress(), customerDto.getAddress()))
                 {
                     throw new BankException("Customer already exists at this address!");
                 }
             }
 
             if (customerList.isEmpty()) {
-                Customer customer = new Customer(firstname, lastname, address);
+                Customer customer = new Customer(customerDto.getFirstName(), customerDto.getLastName(), customerDto.getAddress());
                 customerDAO.persist(customer);
-
                 wildflyAuthDBHelper = new WildflyAuthDBHelper(new File(System.getenv("JBOSS_HOME")));
-                wildflyAuthDBHelper.addUser(String.valueOf(customer.getCustomerId()), password, new String[]{"customer"});
-                return customer.getCustomerId();
+                wildflyAuthDBHelper.addUser(String.valueOf(customer.getCustomerId()), customerDto.getPassword(), new String[]{"customer"});
+                return "Added " + customer.getCustomerId();
             } else {
                 throw new BankException("User already exists");
             }
         } catch (IOException | PersistenceException e) {
             throw new BankException("Could not add customer");
         }
+    }
+
+    @Override
+    public long addCustomer(String firstname, String lastname, String address, String password) throws BankException {
+        return 0;
     }
 
     @Override
@@ -210,7 +204,7 @@ public class BankServiceImpl implements BankService {
                 }
             }
             List<PublicStockQuote> stocks = TradingServicesImpl.getPSQBySymbol(List.of(stockSymbol));
-            if (stocks.isEmpty()) {
+            if (stocks == null || stocks.isEmpty()) {
                 throw new BankException("No stock found for symbol: " + stockSymbol);
             }
             Stock stock = PSQHelper.psqToStock(stocks.get(0), customer, shares);
@@ -259,7 +253,7 @@ public class BankServiceImpl implements BankService {
             }
 
             List<Stock> stocks = stockDAO.findStockByCustomer(stockSymbol, customer);
-            if (stocks.isEmpty()) {
+            if (stocks == null || stocks.isEmpty()) {
                 throw new BankException("No stocks found for symbol: " + stockSymbol +
                         "\n and user: " + customer.getFirstName());
             }
@@ -307,7 +301,6 @@ public class BankServiceImpl implements BankService {
     @RolesAllowed({"employee", "customer"})
     public List<StockDto> getCustomerPortfolio(long customerId) throws BankException {
         List<StockDto> customerStocks = new ArrayList<>();
-        try{
             findCustomer(customerId); //check if user exist
             List<Stock> stocks = stockDAO.getAllStocks(customerId);
             if (stocks != null)
@@ -325,7 +318,7 @@ public class BankServiceImpl implements BankService {
                         .distinct()
                         .toList();
 
-                List<PublicStockQuote> currentvalues = TradingServicesImpl.getTradingWebService().getStockQuotes(stockSymbols);
+                List<PublicStockQuote> currentvalues = TradingServicesImpl.getPSQBySymbol(stockSymbols);
                 for (Map.Entry<String, Integer> entry : stockSummary.entrySet()) {
                     String symbol = entry.getKey();
                     int totalQuantity = entry.getValue();
@@ -339,9 +332,6 @@ public class BankServiceImpl implements BankService {
                 }
                 return customerStocks;
             }
-        } catch (TradingWSException_Exception e) {
-            throw new BankException("Something went wrong while trying to get current values for shares from Trading Service " + e.getMessage());
-        }
         return List.of();
     }
 

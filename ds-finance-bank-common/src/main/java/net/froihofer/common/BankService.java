@@ -12,7 +12,7 @@ import java.util.List;
 public interface BankService {
      String getUserRole();
      long getCurrentUserId();
-     String addCustomer(CustomerDto customerDto);
+     String addCustomer(CustomerDto customerDto) throws BankException;
 
 
      long addCustomer(String firstname, String lastname, String address, String password) throws BankException;

@@ -24,6 +24,8 @@ public class Customer implements Serializable {
     @Column
     private String address;
 
+
+
     public Customer() {}
 
     public Customer(String firstName, String lastName, String address) {
@@ -31,6 +33,7 @@ public class Customer implements Serializable {
         this.lastName = lastName;
         this.address = address;
     }
+
 
     public long getCustomerId() {
         return customerId;
