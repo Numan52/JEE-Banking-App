@@ -63,16 +63,28 @@ public class EmployeeMenu {
     public static void addCustomer(Scanner scanner, BankService bankService){
         System.out.println("+-----------------+-----------------+-----------------+");
         System.out.println("+--------------- Create a new customer ---------------");
-        System.out.println("First Name");
+
+        System.out.println("Username: ");
+        String username = scanner.nextLine();
+        System.out.println("First Name:");
         String firstName = scanner.nextLine();
-        System.out.println("Last Name");
+        System.out.println("Last Name:");
         String lastName = scanner.nextLine();
-        System.out.println("Address");
+        System.out.println("Address:");
         String address = scanner.nextLine();
-        System.out.println("Password");
+        System.out.println("Password:");
         String password = scanner.nextLine();
-        bankService.addCustomer(new CustomerDto(firstName, lastName, address, password));
+
+        try {
+            bankService.addCustomer(username, firstName, lastName, address, password);
+        } catch (BankException e) {
+            System.out.println("Could not add customer: " + e.getMessage());
+            return;
+        }
+        System.out.println("Customer added successfully.");
     }
+
+
     public static void findCustomer(Scanner scanner, BankService bankService) {
         System.out.println("Would you like to search by customer ID or customer name?");
         System.out.println("1: Search by Customer ID");

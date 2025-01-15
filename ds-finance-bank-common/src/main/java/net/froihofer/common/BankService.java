@@ -14,7 +14,7 @@ public interface BankService {
      long getCurrentUserId();
      String addCustomer(CustomerDto customerDto);
 
-     @RolesAllowed({"employee"})
+
      void addCustomer(String username, String firstname, String lastname, String address, String password) throws BankException;
 
      CustomerDto findCustomer(long customerId) throws BankException;

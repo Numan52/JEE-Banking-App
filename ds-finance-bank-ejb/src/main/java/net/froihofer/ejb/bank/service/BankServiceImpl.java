@@ -85,8 +85,9 @@ public class BankServiceImpl implements BankService {
         return "";
     }
 
-    @RolesAllowed({"employee"})
+
     @Override
+    @RolesAllowed({"employee"})
     public void addCustomer(String username, String firstname, String lastname, String address, String password) throws BankException {
         if (username == null || username.isBlank()) {
             throw new BankException("Username is empty!");
@@ -105,40 +106,20 @@ public class BankServiceImpl implements BankService {
         }
 
         WildflyAuthDBHelper wildflyAuthDBHelper;
-        List<Customer> customerList;
-
-        try {
-            customerList = customerDAO.findCustomerByName(firstname, lastname);
-        } catch (EJBException ex) {
-            throw new BankException("Error " + ex);
-        }
-
+        List<Customer> customerList = customerDAO.findCustomerByName(firstname, lastname);;
 
         try {
             if (customerList.isEmpty()) {
-                customerDAO.persist(new Customer(username, lastname, address));
+                customerDAO.persist(new Customer(firstname, lastname, address));
                 wildflyAuthDBHelper = new WildflyAuthDBHelper(new File(System.getenv("JBOSS_HOME")));
-                wildflyAuthDBHelper.addUser(username, password, new String[]{getUserRole()});
+                wildflyAuthDBHelper.addUser(username, password, new String[]{"customer"});
                 //return "User successfully added!";
             } else {
                 throw new BankException("User already exists");
             }
-        } catch (IOException iox) {
-            throw new BankException("Error" + iox);
+        } catch (IOException | PersistenceException e) {
+            throw new BankException("Could not add customer");
         }
-
-        /*
-        try {
-            Customer customer = new Customer(customerDto.getFirstName(),customerDto.getLastName(),customerDto.getAddress());
-            System.out.println("Saving new customer...");
-            customerDAO.persist(customer);
-            System.out.println("New customer saved: " + customer);
-        } catch (PersistenceException e) {
-            return "Error occurred while adding customer";
-        }
-        return customerDto.getFirstName() + " added successfully!";
-        */
-
     }
 
     @Override
@@ -161,6 +142,9 @@ public class BankServiceImpl implements BankService {
 
         List<CustomerDto> customerDtos = new ArrayList<>();
         List<Customer> customers = customerDAO.findCustomerByName(firstName, lastName);
+        if (customers.isEmpty()) {
+            throw new BankException("No customers found");
+        }
 
         for (Customer customer : customers) {
             customerDtos.add(new CustomerDto(

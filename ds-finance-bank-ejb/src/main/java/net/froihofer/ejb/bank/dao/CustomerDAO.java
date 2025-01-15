@@ -14,7 +14,7 @@ public class CustomerDAO {
     @PersistenceContext
     private EntityManager entityManager;
 
-    public void persist(Customer customer) {
+    public void persist(Customer customer) throws PersistenceException {
         try {
             entityManager.persist(customer);
             System.out.println("Customer saved: " + customer);
@@ -48,9 +48,6 @@ public class CustomerDAO {
                     .setParameter("firstName", firstName)
                     .setParameter("lastName", lastName)
                     .getResultList();
-            if (customers.isEmpty()) {
-                throw new BankException("Customer with name " + firstName + " " + lastName + " not found");
-            }
 
             return customers;
         } catch (PersistenceException e) {
