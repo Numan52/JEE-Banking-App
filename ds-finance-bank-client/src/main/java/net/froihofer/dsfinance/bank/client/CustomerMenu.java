@@ -27,7 +27,7 @@ public class CustomerMenu {
                     Helper.buyStock(scanner, bankService);
                     break;
                 case 3:
-                    // TODO: implement method to sell stock
+                    Helper.sellStock(scanner, bankService);
                     break;
                 case 4:
                     Helper.viewDepo(scanner, bankService);

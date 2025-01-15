@@ -45,6 +45,19 @@ public class TradingServicesImpl {
     }
 
 
+    public static BigDecimal sellStock(String symbol, int shares) throws BankException{
+        BigDecimal pricePerShare;
+        try {
+            pricePerShare = TradingServicesImpl.getTradingWebService().sell(symbol, shares);
+        } catch (TradingWSException_Exception e) {
+            System.err.println("Could not sell stock with symbol: " + symbol + "\n" + e.getMessage());
+            throw new BankException("Could not sell stock with symbol: " + symbol + "\n" + e.getMessage());
+        }
+
+        return pricePerShare;
+    }
+
+
     public static BigDecimal buyStock(String symbol, int shares) throws BankException{
         BigDecimal pricePerShare;
         try {

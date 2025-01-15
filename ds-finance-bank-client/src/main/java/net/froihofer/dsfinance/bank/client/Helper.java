@@ -13,28 +13,12 @@ import static net.froihofer.dsfinance.bank.client.EmployeeMenu.findCustomer;
 public class Helper {
 
     public static void buyStock(Scanner scanner, BankService bankService) {
-        // test
-        System.out.println("+-----------------+-----------------+-----------------+");
-        long customerId = 0;
-        String userRole = bankService.getUserRole();
-        if (userRole.equalsIgnoreCase("employee")) {
-            System.out.println("Do you want to search for customers?: Yes (y) | No (n)");
-            String choice = scanner.nextLine().toLowerCase();
-
-            if (choice.equals("y") || choice.equals("yes")) {
-                findCustomer(scanner, bankService);
-            }
-
-            System.out.println("Enter customer id: ");
-            customerId = Long.parseLong(scanner.nextLine());
-
-        }else if (userRole.equalsIgnoreCase("customer")) {
-            customerId = bankService.getCurrentUserId();
-            if (customerId == -1) {
-                System.out.println("Customer not found");
-                return;
-            }
+        long customerId = getCustomerId(scanner, bankService);
+        if (customerId == -1) {
+            System.out.println("Customer not found");
+            return;
         }
+
         System.out.println("Enter the symbol of the stock you wish to buy:");
         String symbol = scanner.nextLine();
 
@@ -52,29 +36,14 @@ public class Helper {
         System.out.println(result);
     }
 
+
     public static void sellStock(Scanner scanner, BankService bankService) {
-        // test
-        System.out.println("+-----------------+-----------------+-----------------+");
-        long customerId = 0;
-        String userRole = bankService.getUserRole();
-        if (userRole.equalsIgnoreCase("employee")) {
-            System.out.println("Do you want to search for customers?: Yes (y) | No (n)");
-            String choice = scanner.nextLine().toLowerCase();
+       long customerId = getCustomerId(scanner, bankService);
+       if (customerId == -1) {
+           System.out.println("Customer not found");
+           return;
+       }
 
-            if (choice.equals("y") || choice.equals("yes")) {
-                findCustomer(scanner, bankService);
-            }
-
-            System.out.println("Enter customer id: ");
-            customerId = Long.parseLong(scanner.nextLine());
-
-        }else if (userRole.equalsIgnoreCase("customer")) {
-            customerId = bankService.getCurrentUserId();
-            if (customerId == -1) {
-                System.out.println("Customer not found");
-                return;
-            }
-        }
         System.out.println("Enter the symbol of the stock you wish to sell:");
         String symbol = scanner.nextLine();
 
@@ -91,6 +60,30 @@ public class Helper {
         }
         System.out.println(result);
     }
+
+
+    public static long getCustomerId(Scanner scanner, BankService bankService) {
+        System.out.println("+-----------------+-----------------+-----------------+");
+        long customerId = 0;
+        String userRole = bankService.getUserRole();
+        if (userRole.equalsIgnoreCase("employee")) {
+            System.out.println("Do you want to search for customers?: Yes (y) | No (n)");
+            String choice = scanner.nextLine().toLowerCase();
+
+            if (choice.equals("y") || choice.equals("yes")) {
+                findCustomer(scanner, bankService);
+            }
+
+            System.out.println("Enter customer id: ");
+            customerId = Long.parseLong(scanner.nextLine());
+
+        } else if (userRole.equalsIgnoreCase("customer")) {
+            customerId = bankService.getCurrentUserId();
+        }
+        return customerId;
+    }
+
+
 
     //Search for stock quotes based on a part of the company name.
     public static void findStock(Scanner scanner, BankService bankService){
@@ -116,6 +109,9 @@ public class Helper {
             System.out.println("+-----------------+-----------------+");
         }
     }
+
+
+
     public static void viewDepo(Scanner scanner, BankService bankService){
         System.out.println("+-----------------+-----------------+-----------------+");
         System.out.println("+--------------- Get Portfolio ---------------");
@@ -163,4 +159,6 @@ public class Helper {
             System.out.println(e.getMessage());
         }
     }
+
+
 }
