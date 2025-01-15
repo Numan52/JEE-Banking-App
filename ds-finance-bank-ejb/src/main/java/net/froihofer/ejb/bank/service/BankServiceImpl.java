@@ -88,10 +88,7 @@ public class BankServiceImpl implements BankService {
 
     @Override
     @RolesAllowed({"employee"})
-    public void addCustomer(String username, String firstname, String lastname, String address, String password) throws BankException {
-        if (username == null || username.isBlank()) {
-            throw new BankException("Username is empty!");
-        }
+    public long addCustomer(String firstname, String lastname, String address, String password) throws BankException {
         if (firstname == null || firstname.isBlank()) {
             throw new BankException("Firstname is empty!");
         }
@@ -110,10 +107,12 @@ public class BankServiceImpl implements BankService {
 
         try {
             if (customerList.isEmpty()) {
-                customerDAO.persist(new Customer(firstname, lastname, address));
+                Customer customer = new Customer(firstname, lastname, address);
+                customerDAO.persist(customer);
+
                 wildflyAuthDBHelper = new WildflyAuthDBHelper(new File(System.getenv("JBOSS_HOME")));
-                wildflyAuthDBHelper.addUser(username, password, new String[]{"customer"});
-                //return "User successfully added!";
+                wildflyAuthDBHelper.addUser(String.valueOf(customer.getCustomerId()), password, new String[]{"customer"});
+                return customer.getCustomerId();
             } else {
                 throw new BankException("User already exists");
             }

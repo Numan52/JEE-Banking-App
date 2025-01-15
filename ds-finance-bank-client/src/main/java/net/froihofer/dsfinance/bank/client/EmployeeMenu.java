@@ -64,8 +64,6 @@ public class EmployeeMenu {
         System.out.println("+-----------------+-----------------+-----------------+");
         System.out.println("+--------------- Create a new customer ---------------");
 
-        System.out.println("Username: ");
-        String username = scanner.nextLine();
         System.out.println("First Name:");
         String firstName = scanner.nextLine();
         System.out.println("Last Name:");
@@ -75,13 +73,14 @@ public class EmployeeMenu {
         System.out.println("Password:");
         String password = scanner.nextLine();
 
+        long userId = -1;
         try {
-            bankService.addCustomer(username, firstName, lastName, address, password);
+            userId = bankService.addCustomer(firstName, lastName, address, password);
         } catch (BankException e) {
             System.out.println("Could not add customer: " + e.getMessage());
-            return;
         }
-        System.out.println("Customer added successfully.");
+
+        System.out.println("Customer created successfully. The user id is: " + userId);
     }
 
 

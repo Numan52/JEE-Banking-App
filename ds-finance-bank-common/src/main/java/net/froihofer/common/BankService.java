@@ -15,7 +15,7 @@ public interface BankService {
      String addCustomer(CustomerDto customerDto);
 
 
-     void addCustomer(String username, String firstname, String lastname, String address, String password) throws BankException;
+     long addCustomer(String firstname, String lastname, String address, String password) throws BankException;
 
      CustomerDto findCustomer(long customerId) throws BankException;
      List<CustomerDto> findCustomerByName(String firstName, String lastName) throws BankException; // Multiple Customer can have same Name -> List<Customer>
