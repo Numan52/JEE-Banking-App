@@ -331,7 +331,6 @@ public class BankServiceImpl implements BankService {
     @RolesAllowed({"employee", "customer"})
     public List<StockDto> getCustomerPortfolio(long customerId) throws BankException {
         log.info("Getting Portfolio for customer {}", customerId);
-        Customer customer = customerDAO.findCustomerById(customerId);
         if(sessionContext.isCallerInRole("customer")) //checking if customer is not buying for other customer
         {
             if (Long.parseLong(sessionContext.getCallerPrincipal().getName()) != customerId) {
@@ -339,41 +338,39 @@ public class BankServiceImpl implements BankService {
             }
         }
         List<StockDto> customerStocks = new ArrayList<>();
-            findCustomer(customerId); //check if user exist
-            List<Stock> stocks = stockDAO.getAllStocks(customerId);
-            if (stocks != null)
-            {
-                Map<String, Integer> stockSummary = new HashMap<>();
+        findCustomer(customerId); //check if user exist
+        List<Stock> stocks = stockDAO.getAllStocks(customerId);
+        if (stocks != null) {
+            Map<String, Integer> stockSummary = new HashMap<>();
 
-                for (Stock stock : stocks) {
-                    String symbol = stock.getStockSymbol();
-                    int quantity = stock.getQuantity();
-                    // addiere Anzahl zum aktuellen Wert in der mapliste
-                    stockSummary.put(symbol, stockSummary.getOrDefault(symbol, 0) + quantity);
-                }
-                List<String> stockSymbols = stocks.stream()
-                        .map(Stock::getStockSymbol) // holt symbol
-                        .distinct()
-                        .toList();
+            for (Stock stock : stocks) {
+                String symbol = stock.getStockSymbol();
+                int quantity = stock.getQuantity();
+                // addiere Anzahl zum aktuellen Wert in der mapliste
+                stockSummary.put(symbol, stockSummary.getOrDefault(symbol, 0) + quantity);
+            }
+            List<String> stockSymbols = stocks.stream()
+                    .map(Stock::getStockSymbol) // holt symbol
+                    .distinct()
+                    .toList();
 
-                List<PublicStockQuote> currentvalues = TradingServicesImpl.getPSQBySymbol(stockSymbols);
-                for (Map.Entry<String, Integer> entry : stockSummary.entrySet()) {
-                    String symbol = entry.getKey();
-                    int totalQuantity = entry.getValue();
+            List<PublicStockQuote> currentvalues = TradingServicesImpl.getPSQBySymbol(stockSymbols);
+            for (Map.Entry<String, Integer> entry : stockSummary.entrySet()) {
+                String symbol = entry.getKey();
+                int totalQuantity = entry.getValue();
 
-                    for (PublicStockQuote stock : currentvalues) {
-                        if (symbol.equals(stock.getSymbol())) { // checkt ob symbol gleich ist
-                            customerStocks.add(new StockDto(customerId, stock.getSymbol(), stock.getCompanyName(), totalQuantity, stock.getLastTradePrice()));
-                            break; // Verlasse die innere Schleife, da das Symbol gefunden wurde
-                        }
+                for (PublicStockQuote stock : currentvalues) {
+                    if (symbol.equals(stock.getSymbol())) { // checkt ob symbol gleich ist
+                        customerStocks.add(new StockDto(customerId, stock.getSymbol(), stock.getCompanyName(), totalQuantity, stock.getLastTradePrice()));
+                        break; // Verlasse die innere Schleife, da das Symbol gefunden wurde
                     }
                 }
-                return customerStocks;
             }
-        {
+            return customerStocks;
+        }else {
             log.info("Customer {} has no stocks", customerId);
+            return List.of();
         }
-        return List.of();
     }
 
     @Override

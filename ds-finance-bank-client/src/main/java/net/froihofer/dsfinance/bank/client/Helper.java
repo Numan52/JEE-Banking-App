@@ -143,7 +143,7 @@ public class Helper {
             } else {
                 System.out.println("Currently holding no Stocks");
             }
-            System.out.println("Total Portfolio Value: " + total);
+            System.out.println("Total Portfolio Value: $" + total);
         }catch (BankException e)
         {
             System.out.println(e.getMessage());
