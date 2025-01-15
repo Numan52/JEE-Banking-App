@@ -92,7 +92,20 @@ public class BankServiceImpl implements BankService {
 
     @Override
     @RolesAllowed({"employee"})
-    public String addCustomer(CustomerDto customerDto) throws BankException {
+    public long addCustomer(CustomerDto customerDto) throws BankException {
+        if (customerDto.getFirstName() == null ||customerDto.getFirstName().isBlank()) {
+            throw new BankException("Firstname is empty!");
+        }
+        if (customerDto.getLastName() == null ||customerDto.getLastName().isBlank()) {
+            throw new BankException("Lastname is empty!");
+        }
+        if (customerDto.getAddress() == null ||customerDto.getAddress().isBlank()) {
+            throw new BankException("Address is empty!");
+        }
+        if (customerDto.getPassword() == null ||customerDto.getPassword().isBlank()) {
+            throw new BankException("Password is empty!");
+        }
+
 
         WildflyAuthDBHelper wildflyAuthDBHelper;
         List<Customer> customerList = customerDAO.findCustomerByName(customerDto.getFirstName(), customerDto.getLastName());;
@@ -111,7 +124,7 @@ public class BankServiceImpl implements BankService {
                 customerDAO.persist(customer);
                 wildflyAuthDBHelper = new WildflyAuthDBHelper(new File(System.getenv("JBOSS_HOME")));
                 wildflyAuthDBHelper.addUser(String.valueOf(customer.getCustomerId()), customerDto.getPassword(), new String[]{"customer"});
-                return "Added " + customer.getCustomerId();
+                return customer.getCustomerId();
             } else {
                 throw new BankException("User already exists");
             }
@@ -317,6 +330,7 @@ public class BankServiceImpl implements BankService {
     @Override
     @RolesAllowed({"employee", "customer"})
     public List<StockDto> getCustomerPortfolio(long customerId) throws BankException {
+        log.info("Getting Portfolio for customer {}", customerId);
         List<StockDto> customerStocks = new ArrayList<>();
             findCustomer(customerId); //check if user exist
             List<Stock> stocks = stockDAO.getAllStocks(customerId);
@@ -349,6 +363,9 @@ public class BankServiceImpl implements BankService {
                 }
                 return customerStocks;
             }
+        {
+            log.info("Customer {} has no stocks", customerId);
+        }
         return List.of();
     }
 
@@ -358,8 +375,7 @@ public class BankServiceImpl implements BankService {
         try {
             return bankDAO.getAvailableVolume();
         } catch (PersistenceException e) {
-            System.err.println("Error getting investable volume: " + e);
-            e.printStackTrace();
+            log.error("Error getting investable volume: {}", String.valueOf(e));
             throw new BankException("Error getting investable volume: " + e.getMessage());
         }
 

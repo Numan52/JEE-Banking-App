@@ -75,7 +75,7 @@ public class EmployeeMenu {
 
         long userId = -1;
         try {
-            userId = bankService.addCustomer(firstName, lastName, address, password);
+            userId = bankService.addCustomer(new CustomerDto(firstName, lastName, address, password));
         } catch (BankException e) {
             System.out.println("Could not add customer: " + e.getMessage());
             return;
