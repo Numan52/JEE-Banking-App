@@ -12,11 +12,7 @@ import java.util.List;
 public interface BankService {
      String getUserRole();
      long getCurrentUserId();
-     String addCustomer(CustomerDto customerDto) throws BankException;
-
-
-     long addCustomer(String firstname, String lastname, String address, String password) throws BankException;
-
+     long addCustomer(CustomerDto customerDto) throws BankException;
      CustomerDto findCustomer(long customerId) throws BankException;
      List<CustomerDto> findCustomerByName(String firstName, String lastName) throws BankException; // Multiple Customer can have same Name -> List<Customer>
      List<StockDto> findStock(String companyName) throws BankException;
