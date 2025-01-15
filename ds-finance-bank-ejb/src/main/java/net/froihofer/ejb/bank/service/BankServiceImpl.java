@@ -4,7 +4,6 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import jakarta.annotation.security.DeclareRoles;
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.ejb.EJBException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import jakarta.ejb.SessionContext;
@@ -16,12 +15,10 @@ import net.froihofer.common.BankException;
 import net.froihofer.common.BankService;
 import net.froihofer.common.dtos.CustomerDto;
 import net.froihofer.common.dtos.StockDto;
-import net.froihofer.dsfinance.ws.trading.api.TradingWSException_Exception;
 import net.froihofer.ejb.bank.Utils.PSQHelper;
 import net.froihofer.ejb.bank.dao.BankDAO;
 import net.froihofer.ejb.bank.dao.CustomerDAO;
 import net.froihofer.ejb.bank.dao.StockDAO;
-import net.froihofer.ejb.bank.entity.Bank;
 import net.froihofer.ejb.bank.entity.Customer;
 import net.froihofer.dsfinance.ws.trading.api.PublicStockQuote;
 import net.froihofer.ejb.bank.entity.Stock;
@@ -32,7 +29,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
 
-import static java.lang.System.in;
 
 @Stateless(name = "BankService")
 @DeclareRoles({"customer", "employee"}) //RolesAllowed need to be changed at each methode!
@@ -78,12 +74,9 @@ public class BankServiceImpl implements BankService {
     {
         try {
             String userIdString = sessionContext.getCallerPrincipal().getName();
-            System.out.println("Userid String: " + userIdString);
             return Long.parseLong(userIdString);
         } catch (NumberFormatException e) {
-            // Fehlerbehandlung: Wenn der String keine gültige Zahl ist
-            System.err.println("Error: Unable to convert user ID to long. Input was: " + sessionContext.getCallerPrincipal().getName());
-            e.printStackTrace();
+            log.error("Error: Unable to convert user ID to long. Input was: " + sessionContext.getCallerPrincipal().getName()); // Fehlerbehandlung: Wenn der String keine gültige Zahl ist
             return -1;
         }
     }
@@ -186,13 +179,12 @@ public class BankServiceImpl implements BankService {
                 log.error("No stock found for company: {}", companyName);
                 throw new BankException("No stock found form " + companyName);
             }
-            System.out.println("The first stock symbol found was: " + stockQuotes.get(0).getSymbol());
             for (PublicStockQuote stock : stockQuotes) {
                 stockDtos.add(new StockDto(stock.getSymbol(), stock.getCompanyName(), stock.getLastTradePrice()));
             }
 
         } catch (BankException e) {
-            System.err.println("Error fetching stocks: " + e.getMessage());
+            log.error("Error fetching stocks: {}", e.getMessage());
             throw e;
         }
 
@@ -231,12 +223,8 @@ public class BankServiceImpl implements BankService {
                 log.error("No stock found for symbol: {}", stockSymbol);
                 throw new BankException("No stock found for symbol: " + stockSymbol);
             }
-
             Stock stock = PSQHelper.psqToStock(stocks.get(0), customer, shares);
-            System.out.println(stocks.size());
-
             stockDAO.persist(stock);
-
             BigDecimal totalCost = stock.getPurchasePrice().multiply(new BigDecimal(shares));
             BigDecimal availableVolume = bankDAO.getAvailableVolume();
             if (totalCost.compareTo(availableVolume) > 0) {
@@ -342,6 +330,13 @@ public class BankServiceImpl implements BankService {
     @RolesAllowed({"employee", "customer"})
     public List<StockDto> getCustomerPortfolio(long customerId) throws BankException {
         log.info("Getting Portfolio for customer {}", customerId);
+        Customer customer = customerDAO.findCustomerById(customerId);
+        if(sessionContext.isCallerInRole("customer")) //checking if customer is not buying for other customer
+        {
+            if (Long.parseLong(sessionContext.getCallerPrincipal().getName()) != customerId) {
+                throw new BankException("You are not allowed to buy stock for other customers.");
+            }
+        }
         List<StockDto> customerStocks = new ArrayList<>();
             findCustomer(customerId); //check if user exist
             List<Stock> stocks = stockDAO.getAllStocks(customerId);
