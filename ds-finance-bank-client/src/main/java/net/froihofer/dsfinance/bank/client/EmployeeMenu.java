@@ -15,7 +15,7 @@ public class EmployeeMenu {
     public void employeeMenu(Scanner scanner, BankService bankService){
 
         int input = 0;
-        while (input != 5) {
+        while (input != 8) {
             System.out.print("\n---TRADING SERVICE---\n");
             System.out.println("(1) Add Customer");
             System.out.println("(2) Search Customer");
