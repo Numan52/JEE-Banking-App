@@ -76,28 +76,29 @@ public class BankServiceImpl implements BankService {
             String userIdString = sessionContext.getCallerPrincipal().getName();
             return Long.parseLong(userIdString);
         } catch (NumberFormatException e) {
-            log.error("Error: Unable to convert user ID to long. Input was: " + sessionContext.getCallerPrincipal().getName()); // Fehlerbehandlung: Wenn der String keine gültige Zahl ist
+            log.error("Error: Unable to convert user ID to long. Input was: {}", sessionContext.getCallerPrincipal().getName()); // Fehlerbehandlung: Wenn der String keine gültige Zahl ist
             return -1;
         }
     }
 
-
-
     @Override
     @RolesAllowed({"employee"})
     public long addCustomer(CustomerDto customerDto) throws BankException {
-        if (customerDto.getFirstName() == null ||customerDto.getFirstName().isBlank()) {
+        if (customerDto.getFirstName() == null || customerDto.getFirstName().isBlank()) {
             throw new BankException("Firstname is empty!");
         }
-        if (customerDto.getLastName() == null ||customerDto.getLastName().isBlank()) {
+        if (customerDto.getLastName() == null || customerDto.getLastName().isBlank()) {
             throw new BankException("Lastname is empty!");
         }
-        if (customerDto.getAddress() == null ||customerDto.getAddress().isBlank()) {
+        if (customerDto.getAddress() == null || customerDto.getAddress().isBlank()) {
             throw new BankException("Address is empty!");
         }
-        if (customerDto.getPassword() == null ||customerDto.getPassword().isBlank()) {
+        if (customerDto.getPassword() == null || customerDto.getPassword().isBlank()) {
             throw new BankException("Password is empty!");
         }
+        customerDto.setFirstName(customerDto.getFirstName().trim());
+        customerDto.setLastName(customerDto.getLastName().trim());
+        customerDto.setAddress(customerDto.getAddress().trim());
 
 
         WildflyAuthDBHelper wildflyAuthDBHelper;
@@ -108,19 +109,15 @@ public class BankServiceImpl implements BankService {
             {
                 if (Objects.equals(customer.getAddress(), customerDto.getAddress()))
                 {
-                    throw new BankException("Customer already exists at this address!");
+                    throw new BankException("Customer already exists with this address!");
                 }
             }
+            Customer customer = new Customer(customerDto.getFirstName(), customerDto.getLastName(), customerDto.getAddress());
+            customerDAO.persist(customer);
+            wildflyAuthDBHelper = new WildflyAuthDBHelper(new File(System.getenv("JBOSS_HOME")));
+            wildflyAuthDBHelper.addUser(String.valueOf(customer.getCustomerId()), customerDto.getPassword(), new String[]{"customer"});
+            return customer.getCustomerId();
 
-            if (customerList.isEmpty()) {
-                Customer customer = new Customer(customerDto.getFirstName(), customerDto.getLastName(), customerDto.getAddress());
-                customerDAO.persist(customer);
-                wildflyAuthDBHelper = new WildflyAuthDBHelper(new File(System.getenv("JBOSS_HOME")));
-                wildflyAuthDBHelper.addUser(String.valueOf(customer.getCustomerId()), customerDto.getPassword(), new String[]{"customer"});
-                return customer.getCustomerId();
-            } else {
-                throw new BankException("User already exists");
-            }
         } catch (IOException | PersistenceException e) {
             throw new BankException("Could not add customer");
         }
@@ -129,7 +126,6 @@ public class BankServiceImpl implements BankService {
     @Override
     @RolesAllowed({"employee"})
     public CustomerDto findCustomer(long customerId) throws BankException {
-
         Customer customer = customerDAO.findCustomerById(customerId);
         return new CustomerDto(customer.getCustomerId(), customer.getFirstName(), customer.getLastName(), customer.getAddress());
     }
@@ -137,12 +133,15 @@ public class BankServiceImpl implements BankService {
     @Override
     @RolesAllowed({"employee"})
     public List<CustomerDto> findCustomerByName(String firstName, String lastName) throws BankException {
+
+        if (firstName == null || firstName.isBlank()) {
+            throw new BankException("Firstname is empty!");
+        }
+        if (lastName == null || lastName.isBlank()) {
+            throw new BankException("Lastname is empty!");
+        }
         firstName = firstName.trim();
         lastName = lastName.trim();
-        if(firstName.isEmpty() || lastName.isEmpty())
-        {
-            throw new BankException("First name and last name cannot be empty");
-        }
 
         List<CustomerDto> customerDtos = new ArrayList<>();
         List<Customer> customers = customerDAO.findCustomerByName(firstName, lastName);
