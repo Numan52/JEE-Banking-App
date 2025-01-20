@@ -17,3 +17,4 @@ This is a Java EE console application that enables customers to buy and sell sto
 * EJB's for business logic
 * RMI for Client-Server communication
 * JPA with H2 database
+* Deployed on a Wildfly server
