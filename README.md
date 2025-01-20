@@ -1,6 +1,6 @@
 # Banking and Stock Management App 💰📈
 
-A banking and stock management app that allows customers to buy and sell stocks. Also, bank employees can buy and sell stocks for customers. Stock information is being retrieved from a Web-Service via SOAP.
+This is a Java EE console application that enables customers to buy and sell stocks and manage their portfolios. Bank employees have extended capabilities to perform stock transactions on behalf of customers and manage customer registrations. Stock data is fetched via a SOAP web service.
 
 ## Features
 ### Customers
